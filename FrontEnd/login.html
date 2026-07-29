@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quant-Ease | Login</title>
+    
+    <!-- Import Montserrat and Open Sans from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Color Palette & Typography */
+        :root {
+            --bg-color: #f4f4f4;
+            --primary-color: #020d20;
+            --secondary-color: #3d7c1f;
+            --error-color: #d32f2f;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--primary-color);
+        }
+
+        /* Card Layout */
+        .login-card {
+            display: flex;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(2, 13, 32, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            min-height: 500px;
+        }
+
+        /* Left Half: Form */
+        .form-section {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-section h2 {
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .form-section p.subtitle {
+            margin-bottom: 24px;
+            color: #666;
+            font-size: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--primary-color);
+        }
+
+        .input-group input {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        button.login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button.login-btn:hover {
+            background-color: #2e5e17;
+        }
+
+        .reset-link-container {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .reset-link-container a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .reset-link-container a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        /* Error Message Container */
+        #error-message {
+            display: none;
+            color: var(--error-color);
+            background-color: #fdeaea;
+            border-left: 4px solid var(--error-color);
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        /* Right Half: Mascot */
+        .mascot-section {
+            flex: 1;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .mascot-section img {
+            max-width: 80%;
+            height: auto;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .login-card {
+                flex-direction: column-reverse;
+            }
+            .mascot-section {
+                padding: 20px;
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <!-- Left Half: Login Form -->
+        <div class="form-section">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Log in to access your trading strategies.</p>
+
+            <div id="error-message"></div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="name@example.com">
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="login-btn" id="submitBtn">Log In</button>
+                
+                <div class="reset-link-container">
+                    <a href="reset_password.html">Forgot your password?</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Half: Mascot -->
+        <div class="mascot-section">
+            <img src="mascot.svg" alt="Quant-Ease Mascot">
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            // Prevent standard form submission
+            event.preventDefault();
+
+            // Setup UI states
+            const errorDiv = document.getElementById('error-message');
+            const submitBtn = document.getElementById('submitBtn');
+            errorDiv.style.display = 'none';
+            submitBtn.textContent = 'Logging in...';
+            submitBtn.disabled = true;
+
+            // Gather inputs
+            const payload = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                // Send JSON request to local FastAPI backend
+                const response = await fetch('http://127.0.0.1:8000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 200) {
+                    // Success! Route the user to the home/dashboard page
+                    window.location.href = 'home.html';
+                } else {
+                    // Handle failure statuses (500, 401, 404, etc.)
+                    const errorData = await response.json();
+                    const errorMessage = errorData.detail || errorData.message || 'Login failed. Please check your credentials and try again.';
+                    
+                    errorDiv.textContent = errorMessage;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                // Handle network/connection errors
+                errorDiv.textContent = 'Network error. Could not connect to the backend server.';
+                errorDiv.style.display = 'block';
+            } finally {
+                // Restore button state
+                submitBtn.textContent = 'Log In';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>
