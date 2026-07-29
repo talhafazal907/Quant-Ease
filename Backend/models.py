@@ -3,11 +3,14 @@ from typing import Optional, Annotated, Literal
 
 """This file is Responsible for the validation of user inputs from the api endpoints"""
 
+from pydantic import BaseModel, Field, EmailStr
+from typing import Annotated
+
 class Register_User(BaseModel):
-    f_name : Annotated[...,str, Field(..., description="First Name of the user")]
-    l_name : Annotated[..., str, Field(..., description="Last Name of the user")]
-    email : Annotated[..., EmailStr, Field(..., description="Email of the user")]
-    password : Annotated[..., str, Field(..., description="password of the user Account")]
+    f_name: Annotated[str, Field(..., description="First Name of the user")]
+    l_name: Annotated[str, Field(..., description="Last Name of the user")]
+    email: Annotated[EmailStr, Field(..., description="Email of the user")]
+    password: Annotated[str, Field(..., description="password of the user Account")]
 
 class Login_User(BaseModel):
     email : Annotated[EmailStr, Field(..., description="Email of the user")]

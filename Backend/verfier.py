@@ -13,7 +13,7 @@ class Verify:
             pass
 
     def send_token(self, email: str):
-        """ This Function will take an email from the backend and send the token to the user email and also back0 for Confirmations"""
+        """ This Function will take an email from the backend and send the token to the user email and also back for Confirmations"""
         try:
             code = str(random.randint(a = 1000, b= 9999))
             message = f"Wellcome to QuantEase. \nYou code is {code}"        
@@ -31,12 +31,3 @@ class Verify:
                 return code
         except Exception as e:
             return e
-        
-    def verify_token(self, email : str ,code : str):
-        from db import DataBase_helper
-        rs = DataBase_helper.verify(email, code)
-        if rs:
-              return 1
-        else:
-            return None 
-        

@@ -24,7 +24,7 @@ class DataBase_helper:
         query = "SELECT * FROM users WHERE email = %s"
         self.cursor.execute(query, (email,))
         user = self.cursor.fetchone()
-        if user :
+        if user:
             return user
         else: 
             return None
@@ -52,16 +52,19 @@ class DataBase_helper:
         
 
     def verify(self, email: str, code : str):
-        query = """SELECT v_code FROM users WHERE email = %s"""
-        self.cursor.execute(query, (email,))
-        user = self.cursor.fetchone()
-        if str(user['v_code']) == code:
-            query = """UPDATE users SET is_verif = TRUE WHERE email = %s"""
+        try:
+            query = """SELECT v_code FROM users WHERE email = %s"""
             self.cursor.execute(query, (email,))
-            self.conn.commit()
-            return 1
-        else:
-            return None
+            user = self.cursor.fetchone()
+            if user and str(user['v_code']) == code:
+                query = """UPDATE users SET is_verif = TRUE WHERE email = %s"""
+                self.cursor.execute(query, (email,))
+                self.conn.commit()
+                return 1
+            else:
+                return None
+        except mysql.connector.Error as err:
+                    return None
  
     def Login(self, email, password):
         try:
