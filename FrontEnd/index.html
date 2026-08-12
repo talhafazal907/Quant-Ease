@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantEase | Automated Strategy Backtesting</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #f4f4f4;
+            --primary-color: #020d20;
+            --secondary-color: #3d7c1f;
+            --secondary-hover: #2e5e17;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #666666;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--primary-color);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Container Limit */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+        }
+
+        .logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-accent {
+            color: var(--secondary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-weight: 500;
+            font-size: 15px;
+            color: var(--primary-color);
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn-outline {
+            padding: 10px 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
+        }
+
+        .btn-primary {
+            padding: 10px 22px;
+            background-color: var(--secondary-color);
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-hover);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0;
+        }
+
+        .hero-grid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .hero-content {
+            flex: 1;
+        }
+
+        .hero-title {
+            font-size: 44px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            max-width: 540px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn-large {
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        .hero-mascot {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 12px 32px rgba(2, 13, 32, 0.15);
+        }
+
+        .hero-mascot img {
+            max-width: 85%;
+            height: auto;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 56px;
+        }
+
+        .section-header h2 {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background-color: var(--bg-color);
+            border-radius: 10px;
+            padding: 32px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--primary-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary-color);
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 80px 0;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .step-card {
+            background-color: var(--card-bg);
+            padding: 32px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(2, 13, 32, 0.05);
+            position: relative;
+        }
+
+        .step-number {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--secondary-color);
+            margin-bottom: 12px;
+        }
+
+        .step-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .step-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* CTA Banner */
+        .cta-banner {
+            padding: 60px 0;
+            background-color: var(--primary-color);
+            color: #ffffff;
+            text-align: center;
+            border-radius: 16px;
+            margin: 40px 0 80px 0;
+        }
+
+        .cta-banner h2 {
+            color: #ffffff;
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+
+        .cta-banner p {
+            color: #94a3b8;
+            font-size: 16px;
+            margin-bottom: 28px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            color: #94a3b8;
+            padding: 40px 0 20px 0;
+            border-top: 1px solid #1e293b;
+        }
+
+        .footer-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .footer-logo {
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .footer-copy {
+            text-align: center;
+            padding-top: 20px;
+            font-size: 13px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 900px) {
+            .hero-grid {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-subtitle {
+                margin: 0 auto 32px auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-mascot {
+                width: 100%;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <nav class="navbar">
+        <div class="container nav-wrapper">
+            <a href="index.html" class="logo">
+                Quant<span class="logo-accent">Ease</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+            </ul>
+
+            <div class="nav-buttons">
+                <a href="login.html" class="btn-outline">Log In</a>
+                <a href="register.html" class="btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <h1 class="hero-title">Automate Your Trading Edge with Precision</h1>
+                <p class="hero-subtitle">Test indicator-based investment strategies across historical market data instantly. Validate win rates, drawdowns, and profitability before risking capital.</p>
+                <div class="hero-actions">
+                    <a href="register.html" class="btn-primary btn-large">Start Backtesting Free</a>
+                    <a href="login.html" class="btn-outline btn-large">Sign In</a>
+                </div>
+            </div>
+            
+            <div class="hero-mascot">
+                <img src="mascot.svg" alt="QuantEase Mascot">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Breakdown -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Built for Strategy Creators</h2>
+                <p>Everything you need to turn indicator ideas into data-backed trading models.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Technical Indicators</h3>
+                    <p>Combine RSI, MACD, Moving Averages, and Bollinger Bands with custom parameters for entry and exit signals.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>High-Speed Engine</h3>
+                    <p>Run multi-year strategy backtests in milliseconds with high precision historical price data.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Detailed Analytics</h3>
+                    <p>Instantly calculate net profit, max drawdown, win rate, profit factor, and risk-reward ratios.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Automated Rules</h3>
+                    <p>Enforce strict position sizing, stop-loss percentages, and take-profit targets across all runs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How QuantEase Works</h2>
+                <p>Three steps from concept to backtested strategy results.</p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <h3>Select Indicators</h3>
+                    <p>Choose your technical indicators and define your trigger conditions for buy and sell orders.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <h3>Set Risk Rules</h3>
+                    <p>Configure initial portfolio balance, leverage limits, stop-loss, and take-profit targets.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <h3>Analyze Metrics</h3>
+                    <p>Evaluate detailed performance reports and equity curves to refine your market strategy.</p>
+                </div>
+            </div>
+
+            <!-- CTA Banner -->
+            <div class="cta-banner">
+                <h2>Ready to test your strategy?</h2>
+                <p>Create your free account today and start backtesting in minutes.</p>
+                <a href="register.html" class="btn-primary btn-large">Create Free Account</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-wrapper">
+                <div class="footer-logo">
+                    Quant<span class="logo-accent">Ease</span>
+                </div>
+                <div class="footer-links">
+                    <a href="login.html" style="color: #ffffff; font-size: 14px;">Sign In</a>
+                </div>
+            </div>
+            <div class="footer-copy">
+                &copy; QuantEase. Automated Indicator-Based Strategy Backtesting.
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

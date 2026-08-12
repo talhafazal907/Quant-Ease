@@ -219,3 +219,5 @@ __marimo__/
 Backend/test.py
 Backend/env.py
 Backend/__pycache__
+Data/
+Backtesting_Engine/.env

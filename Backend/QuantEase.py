@@ -1,10 +1,11 @@
 from fastapi import FastAPI
-from models import Register_User, Verify_User, Login_User, Reset_data, check_user
+from models import *
 from db import DataBase_helper
 from fastapi.responses import JSONResponse
 from verfier import Verify
 from encrypter import Hash
 from fastapi.middleware.cors import CORSMiddleware
+from Backtesting_Engine.backtesting_engine import Backtesting_Engine
 
 dbh = DataBase_helper()
 
@@ -88,3 +89,21 @@ def reset(data : Reset_data):
             return JSONResponse(status_code=500, content= {"massage" : "Issue in Database"})
     else:
         return JSONResponse(status_code=500, content= {"massage" : "Issue in Backend"})
+
+# Now from here started the core  functionality of the QuantEase App
+
+@app.post("/backtest_two_ema_crossover")
+def backtest_two_ema_crossover(data: ema_crossover):
+    try:
+        backtester = Backtesting_Engine(data.model_dump())
+        results = backtester.run()
+        
+        if results["status"] == 1:
+            #Convert the array to a list right before sending the response
+            results["equity_curve"] = results["equity_curve"].tolist()
+            
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results})
+        else:
+            return JSONResponse(status_code=500, content={"message": "Backtest failed", "details": results})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": "Issue in Backend", "error": str(e)})

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantEase | Strategy Backtesting Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Plotly.js CDN -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f4f4f4;
+            --primary-color: #020d20;
+            --secondary-color: #3d7c1f;
+            --secondary-hover: #2e5e17;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #666666;
+            --border-color: #e2e8f0;
+            --error-color: #d32f2f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--primary-color);
+        }
+
+        /* Top Navbar */
+        .navbar {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .logo-accent {
+            color: var(--secondary-color);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-badge {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .logout-btn {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Main App Grid */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Sidebar Form Panel */
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(2, 13, 32, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-color);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+            flex: 1;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--primary-color);
+        }
+
+        .input-group input, .input-group select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            background-color: #ffffff;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .dynamic-section {
+            background-color: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px dashed var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .dynamic-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        button.run-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button.run-btn:hover {
+            background-color: var(--secondary-hover);
+        }
+
+        /* Results Panel */
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Metrics Summary Bar */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .metric-value.negative {
+            color: var(--error-color);
+        }
+
+        /* Chart Area */
+        .chart-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            flex: 1;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chartContainer {
+            width: 100%;
+            height: 100%;
+            min-height: 420px;
+        }
+
+        #errorAlert {
+            display: none;
+            background-color: #fdeaea;
+            color: var(--error-color);
+            border-left: 4px solid var(--error-color);
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Quant<span class="logo-accent">Ease</span></a>
+        <div class="nav-right">
+            <span class="user-badge">Workspace: <strong>Active</strong></span>
+            <a href="login.html" class="logout-btn">Log Out</a>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Container -->
+    <div class="dashboard-container">
+        
+        <!-- Strategy Controls Sidebar -->
+        <div class="panel">
+            <h2 class="panel-title">Strategy Configuration</h2>
+
+            <div id="errorAlert"></div>
+
+            <form id="backtestForm">
+                
+                <!-- Strategy Selection -->
+                <div class="input-group">
+                    <label for="strategy_name">Strategy / Indicator</label>
+                    <select id="strategy_name" name="strategy_name" required>
+                        <option value="double-ema">Double EMA Crossover</option>
+                        <option value="rsi">RSI Mean Reversion (Coming Soon)</option>
+                        <option value="macd">MACD Signal Cross (Coming Soon)</option>
+                    </select>
+                </div>
+
+                <!-- Common Asset & Timeframe Inputs -->
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="symbol">Symbol</label>
+                        <input type="text" id="symbol" name="symbol" value="BTCUSDT" required placeholder="BTCUSDT">
+                    </div>
+                    <div class="input-group">
+                        <label for="time_frame">Timeframe</label>
+                        <select id="time_frame" name="time_frame" required>
+                            <option value="1m">1m</option>
+                            <option value="5m" selected>5m</option>
+                            <option value="15m">15m</option>
+                            <option value="1h">1h</option>
+                            <option value="4h">4h</option>
+                            <option value="1d">1d</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="market_type">Market Type</label>
+                        <select id="market_type" name="market_type" required>
+                            <option value="spot" selected>Spot</option>
+                            <option value="futures">Futures</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="capital">Initial Capital ($)</label>
+                        <input type="number" step="any" id="capital" name="capital" value="1000" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="risk">Risk per Trade (%)</label>
+                        <input type="number" step="any" id="risk" name="risk" value="1.0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="reward">Reward Target (%)</label>
+                        <input type="number" step="any" id="reward" name="reward" value="3.0" required>
+                    </div>
+                </div>
+
+                <!-- Dynamic Strategy Parameters -->
+                <div class="dynamic-section">
+                    <div class="dynamic-section-title">Indicator Parameters</div>
+                    <div id="dynamicFieldsContainer"></div>
+                </div>
+
+                <button type="submit" class="run-btn" id="runBtn">Run Backtest</button>
+            </form>
+        </div>
+
+        <!-- Results Display Panel -->
+        <div class="results-panel">
+            
+            <!-- Metric Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Final Capital</div>
+                    <div class="metric-value" id="metricCapital">$0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Trades</div>
+                    <div class="metric-value" id="metricTrades">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Win Rate</div>
+                    <div class="metric-value" id="metricWinRate">0.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Max Drawdown</div>
+                    <div class="metric-value negative" id="metricMaxDD">0.00%</div>
+                </div>
+            </div>
+
+            <!-- Equity Curve Plotly Chart -->
+            <div class="chart-card">
+                <h3 style="font-size: 16px; margin-bottom: 12px;">Equity Curve Performance</h3>
+                <div id="chartContainer"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const STRATEGY_CONFIGS = {
+            'double-ema': {
+                endpoint: 'http://127.0.0.1:8000/backtest_two_ema_crossover',
+                fields: [
+                    { name: 'ema_short', label: 'Short EMA Period', type: 'number', default: 20, parse: parseInt },
+                    { name: 'ema_long', label: 'Long EMA Period', type: 'number', default: 200, parse: parseInt }
+                ]
+            },
+            'rsi': {
+                endpoint: 'http://127.0.0.1:8000/backtest_rsi',
+                fields: [
+                    { name: 'rsi_period', label: 'RSI Period', type: 'number', default: 14, parse: parseInt },
+                    { name: 'overbought', label: 'Overbought Threshold', type: 'number', default: 70, parse: parseFloat },
+                    { name: 'oversold', label: 'Oversold Threshold', type: 'number', default: 30, parse: parseFloat }
+                ]
+            },
+            'macd': {
+                endpoint: 'http://127.0.0.1:8000/backtest_macd',
+                fields: [
+                    { name: 'fast_period', label: 'Fast Period', type: 'number', default: 12, parse: parseInt },
+                    { name: 'slow_period', label: 'Slow Period', type: 'number', default: 26, parse: parseInt },
+                    { name: 'signal_period', label: 'Signal Period', type: 'number', default: 9, parse: parseInt }
+                ]
+            }
+        };
+
+        const strategySelect = document.getElementById('strategy_name');
+        const dynamicContainer = document.getElementById('dynamicFieldsContainer');
+        const form = document.getElementById('backtestForm');
+        const errorAlert = document.getElementById('errorAlert');
+        const runBtn = document.getElementById('runBtn');
+
+        function renderDynamicFields(strategyKey) {
+            dynamicContainer.innerHTML = '';
+            const config = STRATEGY_CONFIGS[strategyKey];
+
+            if (!config || !config.fields) {
+                dynamicContainer.innerHTML = '<p style="font-size:13px; color:#888;">No specific parameters required.</p>';
+                return;
+            }
+
+            config.fields.forEach(field => {
+                const group = document.createElement('div');
+                group.className = 'input-group';
+
+                const label = document.createElement('label');
+                label.htmlFor = field.name;
+                label.textContent = field.label;
+
+                const input = document.createElement('input');
+                input.type = field.type;
+                input.id = field.name;
+                input.name = field.name;
+                input.value = field.default;
+                input.required = true;
+
+                group.appendChild(label);
+                group.appendChild(input);
+                dynamicContainer.appendChild(group);
+            });
+        }
+
+        function initEmptyChart() {
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                margin: { t: 20, r: 20, l: 50, b: 40 },
+                xaxis: { title: 'Time Points / Bars', gridcolor: '#e2e8f0' },
+                yaxis: { title: 'Capital ($)', gridcolor: '#e2e8f0' }
+            };
+            Plotly.newPlot('chartContainer', [], layout, { responsive: true });
+        }
+
+        strategySelect.addEventListener('change', (e) => {
+            renderDynamicFields(e.target.value);
+        });
+
+        renderDynamicFields('double-ema');
+        initEmptyChart();
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            errorAlert.style.display = 'none';
+
+            const selectedStrategy = strategySelect.value;
+            const config = STRATEGY_CONFIGS[selectedStrategy];
+
+            if (!config) {
+                errorAlert.textContent = 'Invalid strategy selection.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            const payload = {
+                strategy_name: selectedStrategy,
+                symbol: document.getElementById('symbol').value,
+                time_frame: document.getElementById('time_frame').value,
+                market_type: document.getElementById('market_type').value,
+                capital: parseFloat(document.getElementById('capital').value),
+                risk: parseFloat(document.getElementById('risk').value),
+                reward: parseFloat(document.getElementById('reward').value)
+            };
+
+            config.fields.forEach(field => {
+                const el = document.getElementById(field.name);
+                if (el) {
+                    payload[field.name] = field.parse ? field.parse(el.value) : el.value;
+                }
+            });
+
+            runBtn.disabled = true;
+            runBtn.textContent = 'Running Backtest Engine...';
+
+            try {
+                const response = await fetch(config.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                // Safely extract results regardless of JSON wrapper key
+                const resultsObj = data.results ? data.results : data;
+
+                if (response.status === 200 && resultsObj) {
+                    updateDashboard(resultsObj);
+                } else {
+                    const msg = data.details?.status || data.message || data.error || 'Backtest execution failed.';
+                    errorAlert.textContent = `Server Error: ${msg}`;
+                    errorAlert.style.display = 'block';
+                }
+            } catch (err) {
+                errorAlert.textContent = 'Failed to connect to server at ' + config.endpoint;
+                errorAlert.style.display = 'block';
+            } finally {
+                runBtn.disabled = false;
+                runBtn.textContent = 'Run Backtest';
+            }
+        });
+
+        function updateDashboard(results) {
+            // Extract numbers directly from updated backend payload
+            const finalCap = Number(results.final_capital) || 0;
+            const tradesCount = Number(results.trades) || 0;
+            const winRate = Number(results.win_rate) || 0; 
+            const maxDD = Number(results.max_drawdown) || 0; 
+            const eqCurve = Array.isArray(results.equity_curve) ? results.equity_curve : [];
+
+            // Update UI Metric Text
+            document.getElementById('metricCapital').textContent = `$${finalCap.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('metricTrades').textContent = tradesCount.toLocaleString('en-US');
+            document.getElementById('metricWinRate').textContent = `${winRate.toFixed(1)}%`;
+            document.getElementById('metricMaxDD').textContent = `${maxDD.toFixed(2)}%`;
+
+            // Plot Equity Curve
+            const trace = {
+                x: eqCurve.map((_, index) => index),
+                y: eqCurve,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#3d7c1f', width: 2 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(61, 124, 31, 0.08)'
+            };
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                margin: { t: 10, r: 20, l: 50, b: 40 },
+                xaxis: { title: 'Time Points / Bars', gridcolor: '#e2e8f0' },
+                yaxis: { title: 'Portfolio Value ($)', gridcolor: '#e2e8f0' }
+            };
+
+            Plotly.newPlot('chartContainer', [trace], layout, { responsive: true });
+        }
+    </script>
+</body>
+</html>
