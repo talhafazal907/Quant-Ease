@@ -216,8 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+tests/__pycache__
+
+Backend/.env
 Backend/test.py
-Backend/env.py
-Backend/__pycache__
-Data/
-Backtesting_Engine/.env
+Backend/Backtesting_Engine/test.py
+Backend/Backtesting_Engine/test.ipynb
+Backend/Backtesting_Engine/.env
+PROJECT_OVERVIEW.md

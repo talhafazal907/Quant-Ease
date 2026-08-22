@@ -2,6 +2,7 @@ import mysql.connector
 from encrypter import Hash
 from dotenv import load_dotenv
 import os
+import json
 load_dotenv()
 
 class DataBase_helper:
@@ -27,6 +28,14 @@ class DataBase_helper:
         if user:
             return user
         else: 
+            return None
+
+    def fetch_user_by_id(self, user_id: int):
+        try:
+            query = "SELECT * FROM users WHERE u_id = %s"
+            self.cursor.execute(query, (user_id,))
+            return self.cursor.fetchone()
+        except mysql.connector.Error:
             return None
         
 
@@ -85,6 +94,58 @@ class DataBase_helper:
         except mysql.connector.Error as err:
             # This will now print the EXACT reason if MySQL rejects the query
             return None
+
+    def authenticate_user(self, email: str, password: str):
+        """Return the verified user record when the supplied credentials are valid."""
+        try:
+            user = self.fetch_user(email)
+            if user and user["is_verif"] == 1 and Hash().match(password, user["p_hash"]):
+                return user
+            return None
+        except (mysql.connector.Error, KeyError, TypeError):
+            return None
+
+    def save_backtest_activity(self, user_id: int, strategy_data: dict, results: dict):
+        """Persist a strategy configuration and its linked backtest result atomically."""
+        try:
+            strategy_query = """
+                INSERT INTO strategy (s_id, Strategy_name, config_params)
+                VALUES (%s, %s, %s)
+            """
+            self.cursor.execute(
+                strategy_query,
+                (
+                    user_id,
+                    strategy_data["strategy_name"],
+                    json.dumps(strategy_data),
+                ),
+            )
+            strategy_id = self.cursor.lastrowid
+
+            result_query = """
+                INSERT INTO results
+                    (s_id, initial_capital, final_capital, Total_trades,
+                     max_drawdown, equity_data, winrate)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            self.cursor.execute(
+                result_query,
+                (
+                    strategy_id,
+                    strategy_data["capital"],
+                    results["final_capital"],
+                    results["trades"],
+                    results["max_drawdown"],
+                    json.dumps(results["equity_curve"]),
+                    results["win_rate"],
+                ),
+            )
+            self.conn.commit()
+            return True
+        except (mysql.connector.Error, KeyError, TypeError, ValueError):
+            if self.conn:
+                self.conn.rollback()
+            return False
     
     def add_reset_token(self, u_id: int, code: str):
         try:

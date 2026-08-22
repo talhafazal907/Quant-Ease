@@ -1,506 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuantEase | Automated Strategy Backtesting</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --bg-color: #f4f4f4;
-            --primary-color: #020d20;
-            --secondary-color: #3d7c1f;
-            --secondary-hover: #2e5e17;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --text-muted: #666666;
-            --border-color: #e2e8f0;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            font-family: 'Open Sans', sans-serif;
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        h1, h2, h3, h4 {
-            font-family: 'Montserrat', sans-serif;
-            color: var(--primary-color);
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        /* Container Limit */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* Navbar */
-        .navbar {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 80px;
-        }
-
-        .logo {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-accent {
-            color: var(--secondary-color);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-            list-style: none;
-        }
-
-        .nav-links a {
-            font-weight: 500;
-            font-size: 15px;
-            color: var(--primary-color);
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--secondary-color);
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .btn-outline {
-            padding: 10px 20px;
-            border: 2px solid var(--primary-color);
-            border-radius: 6px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--primary-color);
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline:hover {
-            background-color: var(--primary-color);
-            color: #ffffff;
-        }
-
-        .btn-primary {
-            padding: 10px 22px;
-            background-color: var(--secondary-color);
-            border-radius: 6px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            color: #ffffff;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--secondary-hover);
-        }
-
-        /* Hero Section */
-        .hero {
-            padding: 80px 0;
-        }
-
-        .hero-grid {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 40px;
-        }
-
-        .hero-content {
-            flex: 1;
-        }
-
-        .hero-title {
-            font-size: 44px;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 20px;
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: var(--text-muted);
-            margin-bottom: 32px;
-            max-width: 540px;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .btn-large {
-            padding: 16px 32px;
-            font-size: 16px;
-        }
-
-        .hero-mascot {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--bg-color);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 12px 32px rgba(2, 13, 32, 0.15);
-        }
-
-        .hero-mascot img {
-            max-width: 85%;
-            height: auto;
-        }
-
-        /* Features Section */
-        .features {
-            padding: 80px 0;
-            background-color: var(--card-bg);
-            border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 56px;
-        }
-
-        .section-header h2 {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-
-        .section-header p {
-            color: var(--text-muted);
-            font-size: 16px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 30px;
-        }
-
-        .feature-card {
-            background-color: var(--bg-color);
-            border-radius: 10px;
-            padding: 32px;
-            border: 1px solid var(--border-color);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            background-color: var(--primary-color);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--secondary-color);
-            font-weight: 700;
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-
-        .feature-card h3 {
-            font-size: 20px;
-            margin-bottom: 12px;
-        }
-
-        .feature-card p {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        /* How It Works Section */
-        .how-it-works {
-            padding: 80px 0;
-        }
-
-        .steps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        .step-card {
-            background-color: var(--card-bg);
-            padding: 32px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(2, 13, 32, 0.05);
-            position: relative;
-        }
-
-        .step-number {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 36px;
-            font-weight: 800;
-            color: var(--secondary-color);
-            margin-bottom: 12px;
-        }
-
-        .step-card h3 {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .step-card p {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        /* CTA Banner */
-        .cta-banner {
-            padding: 60px 0;
-            background-color: var(--primary-color);
-            color: #ffffff;
-            text-align: center;
-            border-radius: 16px;
-            margin: 40px 0 80px 0;
-        }
-
-        .cta-banner h2 {
-            color: #ffffff;
-            font-size: 32px;
-            margin-bottom: 16px;
-        }
-
-        .cta-banner p {
-            color: #94a3b8;
-            font-size: 16px;
-            margin-bottom: 28px;
-        }
-
-        /* Footer */
-        footer {
-            background-color: var(--primary-color);
-            color: #94a3b8;
-            padding: 40px 0 20px 0;
-            border-top: 1px solid #1e293b;
-        }
-
-        .footer-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 24px;
-            border-bottom: 1px solid #1e293b;
-        }
-
-        .footer-logo {
-            color: #ffffff;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .footer-copy {
-            text-align: center;
-            padding-top: 20px;
-            font-size: 13px;
-        }
-
-        /* Mobile Responsiveness */
-        @media (max-width: 900px) {
-            .hero-grid {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .hero-subtitle {
-                margin: 0 auto 32px auto;
-            }
-
-            .hero-actions {
-                justify-content: center;
-            }
-
-            .hero-mascot {
-                width: 100%;
-            }
-
-            .nav-links {
-                display: none;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QuantEase makes crypto strategy backtesting clear, fast, and accessible.">
+  <title>QuantEase | Test smarter. Trade with clarity.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-    <!-- Header Navigation -->
-    <nav class="navbar">
-        <div class="container nav-wrapper">
-            <a href="index.html" class="logo">
-                Quant<span class="logo-accent">Ease</span>
-            </a>
-
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-            </ul>
-
-            <div class="nav-buttons">
-                <a href="login.html" class="btn-outline">Log In</a>
-                <a href="register.html" class="btn-primary">Get Started</a>
-            </div>
-        </div>
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a class="brand" href="#top" aria-label="QuantEase home"><img src="logo-01.png" alt=""><span>Quant<span>Ease</span></span></a>
+      <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button>
+      <div class="nav-links" id="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#insights">Insights</a>
+        <a class="nav-signin" href="#signin">Sign in</a>
+        <a class="button button-small" href="#get-started">Get started <span aria-hidden="true">→</span></a>
+      </div>
     </nav>
+  </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container hero-grid">
-            <div class="hero-content">
-                <h1 class="hero-title">Automate Your Trading Edge with Precision</h1>
-                <p class="hero-subtitle">Test indicator-based investment strategies across historical market data instantly. Validate win rates, drawdowns, and profitability before risking capital.</p>
-                <div class="hero-actions">
-                    <a href="register.html" class="btn-primary btn-large">Start Backtesting Free</a>
-                    <a href="login.html" class="btn-outline btn-large">Sign In</a>
-                </div>
-            </div>
-            
-            <div class="hero-mascot">
-                <img src="mascot.svg" alt="QuantEase Mascot">
-            </div>
+  <main id="top">
+    <section class="hero container" id="get-started">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span> BUILT FOR CRYPTO STRATEGY RESEARCH</p>
+        <h1>Test smarter.<br><em>Trade with clarity.</em></h1>
+        <p class="hero-text">Configure your strategy, run it against historical market data, and understand every result before you make a move.</p>
+        <div class="hero-actions">
+          <a class="button button-large" href="#how-it-works">Start a backtest <span aria-hidden="true">→</span></a>
+          <a class="text-link" href="#features">Explore the platform <span aria-hidden="true">↓</span></a>
         </div>
+        <div class="trust-row" aria-label="Platform benefits">
+          <span>✓ No code required</span><span>✓ Historical data</span><span>✓ Clear metrics</span>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-label="Example QuantEase backtest dashboard">
+        <div class="glow glow-one"></div><div class="glow glow-two"></div>
+        <div class="dashboard-card">
+          <div class="card-topbar"><div><span class="tiny-label">BACKTEST OVERVIEW</span><strong>EMA Crossover · BTC/USDT</strong></div><span class="status"><i></i> Completed</span></div>
+          <div class="metric-grid">
+            <div><span>Net return</span><strong class="positive">+24.8%</strong><small>+$2,480.00</small></div>
+            <div><span>Win rate</span><strong>62.4%</strong><small>154 trades</small></div>
+            <div><span>Max drawdown</span><strong>-8.2%</strong><small>Controlled risk</small></div>
+          </div>
+          <div class="chart-head"><span>Equity curve</span><span>Jan — Dec 2025</span></div>
+          <div class="chart" role="img" aria-label="Example rising equity curve"><svg viewBox="0 0 600 188" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#64a31e" stop-opacity=".3"/><stop offset="1" stop-color="#64a31e" stop-opacity="0"/></linearGradient></defs><path class="grid" d="M0 28H600M0 76H600M0 124H600M0 172H600"/><path class="area" d="M0 162 L26 155 L50 158 L75 139 L100 143 L128 121 L151 132 L179 106 L203 117 L232 95 L255 100 L280 77 L307 93 L332 69 L356 82 L379 52 L405 61 L428 43 L453 56 L480 31 L505 40 L531 19 L556 29 L580 11 L600 16 V188 H0Z"/><path class="line" d="M0 162 L26 155 L50 158 L75 139 L100 143 L128 121 L151 132 L179 106 L203 117 L232 95 L255 100 L280 77 L307 93 L332 69 L356 82 L379 52 L405 61 L428 43 L453 56 L480 31 L505 40 L531 19 L556 29 L580 11 L600 16"/></svg></div>
+          <div class="chart-labels"><span>Jan</span><span>Apr</span><span>Jul</span><span>Oct</span><span>Dec</span></div>
+        </div>
+        <div class="floating-card"><span class="tiny-label">YOUR NEXT STEP</span><strong>Turn assumptions into evidence.</strong><span class="arrow-circle">↗</span></div>
+      </div>
     </section>
 
-    <!-- Features Breakdown -->
-    <section class="features" id="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Built for Strategy Creators</h2>
-                <p>Everything you need to turn indicator ideas into data-backed trading models.</p>
-            </div>
+    <section class="logos" aria-label="Supported market types"><div class="container"><span>RESEARCH WITH CONFIDENCE</span><div><b>SPOT</b><i></i><b>FUTURES</b><i></i><b>RULE-BASED</b><i></i><b>DATA-DRIVEN</b></div></div></section>
 
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Technical Indicators</h3>
-                    <p>Combine RSI, MACD, Moving Averages, and Bollinger Bands with custom parameters for entry and exit signals.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>High-Speed Engine</h3>
-                    <p>Run multi-year strategy backtests in milliseconds with high precision historical price data.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📈</div>
-                    <h3>Detailed Analytics</h3>
-                    <p>Instantly calculate net profit, max drawdown, win rate, profit factor, and risk-reward ratios.</p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Automated Rules</h3>
-                    <p>Enforce strict position sizing, stop-loss percentages, and take-profit targets across all runs.</p>
-                </div>
-            </div>
-        </div>
+    <section class="process section container" id="how-it-works">
+      <div class="section-intro"><p class="eyebrow">HOW IT WORKS</p><h2>From an idea to<br>an informed decision.</h2></div>
+      <div class="steps">
+        <article><span class="step-number">01</span><h3>Configure</h3><p>Choose a market, timeframe, and the rules that define your strategy.</p><div class="step-icon sliders">☷</div></article>
+        <article><span class="step-number">02</span><h3>Backtest</h3><p>Run your strategy on historical price data in a deterministic simulation.</p><div class="step-icon chart-icon">⌁</div></article>
+        <article><span class="step-number">03</span><h3>Understand</h3><p>Review performance, drawdown, and trade statistics in one clear view.</p><div class="step-icon inspect">◌</div></article>
+      </div>
     </section>
 
-    <!-- How It Works -->
-    <section class="how-it-works" id="how-it-works">
-        <div class="container">
-            <div class="section-header">
-                <h2>How QuantEase Works</h2>
-                <p>Three steps from concept to backtested strategy results.</p>
-            </div>
+    <section class="feature-band" id="features"><div class="container feature-layout"><div><p class="eyebrow light">BUILT FOR CLARITY</p><h2>Every result has a story.</h2><p class="feature-copy">QuantEase keeps the mechanics visible—so you can see how a strategy behaved, not just a headline number.</p><a class="text-link light-link" href="#insights">See what you can measure <span>→</span></a></div><div class="feature-points"><div><span>01</span><p><b>Transparent execution</b>Explicit rules, visible assumptions, reproducible results.</p></div><div><span>02</span><p><b>Performance that matters</b>Equity curves, win rate, drawdown, and trade-level context.</p></div><div><span>03</span><p><b>Made to explore</b>Test parameters without needing to write the infrastructure first.</p></div></div></div></section>
 
-            <div class="steps-grid">
-                <div class="step-card">
-                    <div class="step-number">01</div>
-                    <h3>Select Indicators</h3>
-                    <p>Choose your technical indicators and define your trigger conditions for buy and sell orders.</p>
-                </div>
+    <section class="insights section container" id="insights"><div class="section-intro"><p class="eyebrow">THE QUANTEASE APPROACH</p><h2>Quantitative research,<br>without the clutter.</h2></div><p class="insight-text">A focused workspace for asking better questions of your strategy—before capital is at risk.</p></section>
 
-                <div class="step-card">
-                    <div class="step-number">02</div>
-                    <h3>Set Risk Rules</h3>
-                    <p>Configure initial portfolio balance, leverage limits, stop-loss, and take-profit targets.</p>
-                </div>
+    <section class="cta container"><div><p class="eyebrow">READY WHEN YOU ARE</p><h2>Put your strategy<br>to the test.</h2></div><a class="button button-light button-large" href="#get-started">Create your first backtest <span>→</span></a></section>
+  </main>
 
-                <div class="step-card">
-                    <div class="step-number">03</div>
-                    <h3>Analyze Metrics</h3>
-                    <p>Evaluate detailed performance reports and equity curves to refine your market strategy.</p>
-                </div>
-            </div>
-
-            <!-- CTA Banner -->
-            <div class="cta-banner">
-                <h2>Ready to test your strategy?</h2>
-                <p>Create your free account today and start backtesting in minutes.</p>
-                <a href="register.html" class="btn-primary btn-large">Create Free Account</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-wrapper">
-                <div class="footer-logo">
-                    Quant<span class="logo-accent">Ease</span>
-                </div>
-                <div class="footer-links">
-                    <a href="login.html" style="color: #ffffff; font-size: 14px;">Sign In</a>
-                </div>
-            </div>
-            <div class="footer-copy">
-                &copy; QuantEase. Automated Indicator-Based Strategy Backtesting.
-            </div>
-        </div>
-    </footer>
-
+  <footer><div class="container footer-inner"><a class="brand" href="#top"><img src="logo-01.png" alt=""><span>Quant<span>Ease</span></span></a><p>Quantitative experimentation, made clearer.</p><span>© 2026 QuantEase</span></div></footer>
+  <script src="script.js"></script>
 </body>
 </html>

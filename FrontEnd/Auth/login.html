@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quant-Ease | Verify Email</title>
+    <title>QuantEase | Log in</title>
     
     <!-- Import Montserrat and Open Sans from Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,7 +44,7 @@
         }
 
         /* Card Layout */
-        .verify-card {
+        .login-card {
             display: flex;
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -70,20 +70,9 @@
         }
 
         .form-section p.subtitle {
-            margin-bottom: 15px;
+            margin-bottom: 24px;
             color: #666;
             font-size: 15px;
-        }
-
-        .spam-notice {
-            background-color: #eef2eb;
-            color: var(--secondary-color);
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            margin-bottom: 24px;
-            border-left: 4px solid var(--secondary-color);
-            font-weight: 500;
         }
 
         .input-group {
@@ -111,15 +100,10 @@
         .input-group input:focus {
             outline: none;
             border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(61, 124, 31, 0.14);
         }
 
-        .input-group input#code {
-            letter-spacing: 4px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        button.verify-btn {
+        button.login-btn {
             width: 100%;
             padding: 14px;
             background-color: var(--secondary-color);
@@ -134,8 +118,26 @@
             margin-top: 10px;
         }
 
-        button.verify-btn:hover {
+        button.login-btn:hover {
             background-color: #2e5e17;
+        }
+
+        .reset-link-container {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .reset-link-container a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .reset-link-container a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
         }
 
         /* Error Message Container */
@@ -167,7 +169,7 @@
 
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
-            .verify-card {
+            .login-card {
                 flex-direction: column-reverse;
             }
             .mascot-section {
@@ -179,41 +181,41 @@
 </head>
 <body>
 
-    <div class="verify-card">
-        <!-- Left Half: Verification Form -->
+    <div class="login-card">
+        <!-- Left Half: Login Form -->
         <div class="form-section">
-            <h2>Verify Email</h2>
-            <p class="subtitle">Enter the 4-digit code sent to your inbox.</p>
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Log in to access your trading strategies.</p>
 
-            <div class="spam-notice">
-                (Please check your spam folder in case you didn't find your code from Quant-Ease)
-            </div>
+            <div id="error-message" role="alert" aria-live="polite"></div>
 
-            <div id="error-message"></div>
-
-            <form id="verifyForm">
+            <form id="loginForm">
                 <div class="input-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required placeholder="name@example.com">
+                    <input type="email" id="email" name="email" required placeholder="name@example.com" autocomplete="email" autofocus>
                 </div>
                 
                 <div class="input-group">
-                    <label for="code">4-Digit Code</label>
-                    <input type="text" id="code" name="code" required maxlength="4" pattern="\d{4}" placeholder="1234" autocomplete="one-time-code">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
                 </div>
                 
-                <button type="submit" class="verify-btn" id="submitBtn">Verify Account</button>
+                <button type="submit" class="login-btn" id="submitBtn">Log In</button>
+                
+                <div class="reset-link-container">
+                    <a href="check_user.html">Forgot your password?</a>
+                </div>
             </form>
         </div>
 
         <!-- Right Half: Mascot -->
         <div class="mascot-section">
-            <img src="mascot.svg" alt="Quant-Ease Mascot">
+            <img src="../mascot.svg" alt="QuantEase mascot">
         </div>
     </div>
 
     <script>
-        document.getElementById('verifyForm').addEventListener('submit', async function(event) {
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
             // Prevent standard form submission
             event.preventDefault();
 
@@ -221,18 +223,18 @@
             const errorDiv = document.getElementById('error-message');
             const submitBtn = document.getElementById('submitBtn');
             errorDiv.style.display = 'none';
-            submitBtn.textContent = 'Verifying...';
+            submitBtn.textContent = 'Logging in...';
             submitBtn.disabled = true;
 
-            // Gather inputs (code is extracted as a string)
+            // Gather inputs
             const payload = {
                 email: document.getElementById('email').value,
-                code: document.getElementById('code').value
+                password: document.getElementById('password').value
             };
 
             try {
                 // Send JSON request to local FastAPI backend
-                const response = await fetch('http://127.0.0.1:8000/verify', {
+                const response = await fetch('http://127.0.0.1:8000/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -241,12 +243,12 @@
                 });
 
                 if (response.status === 200) {
-                    // Success! Route the user to login
-                    window.location.href = 'login.html';
+                    // Success! Route the user to the home/dashboard page
+                    window.location.href = 'home.html';
                 } else {
-                    // Handle 500 or other failure statuses
+                    // Handle failure statuses (500, 401, 404, etc.)
                     const errorData = await response.json();
-                    const errorMessage = errorData.detail || errorData.message || 'Verification failed. Please check your code and try again.';
+                    const errorMessage = errorData.detail || errorData.message || 'Login failed. Please check your credentials and try again.';
                     
                     errorDiv.textContent = errorMessage;
                     errorDiv.style.display = 'block';
@@ -257,7 +259,7 @@
                 errorDiv.style.display = 'block';
             } finally {
                 // Restore button state
-                submitBtn.textContent = 'Verify Account';
+                submitBtn.textContent = 'Log In';
                 submitBtn.disabled = false;
             }
         });

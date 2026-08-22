@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quant-Ease | Register</title>
+    <title>QuantEase | Verify email</title>
     
     <!-- Import Montserrat and Open Sans from Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,7 +44,7 @@
         }
 
         /* Card Layout */
-        .register-card {
+        .verify-card {
             display: flex;
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -69,23 +69,27 @@
             font-size: 28px;
         }
 
-        .form-section p {
-            margin-bottom: 24px;
+        .form-section p.subtitle {
+            margin-bottom: 15px;
             color: #666;
-            font-size: 14px;
+            font-size: 15px;
         }
 
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
+        .spam-notice {
+            background-color: #eef2eb;
+            color: var(--secondary-color);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 24px;
+            border-left: 4px solid var(--secondary-color);
+            font-weight: 500;
         }
 
         .input-group {
-            flex: 1;
             display: flex;
             flex-direction: column;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .input-group label {
@@ -107,9 +111,16 @@
         .input-group input:focus {
             outline: none;
             border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(61, 124, 31, 0.14);
         }
 
-        button.register-btn {
+        .input-group input#code {
+            letter-spacing: 4px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        button.verify-btn {
             width: 100%;
             padding: 14px;
             background-color: var(--secondary-color);
@@ -124,8 +135,8 @@
             margin-top: 10px;
         }
 
-        button.register-btn:hover {
-            background-color: #2e5e17; /* A slightly darker shade of secondary */
+        button.verify-btn:hover {
+            background-color: #2e5e17;
         }
 
         /* Error Message Container */
@@ -157,110 +168,97 @@
 
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
-            .register-card {
-                flex-direction: column-reverse; /* Form on top, mascot on bottom for mobile */
-            }
-            .form-row {
-                flex-direction: column;
-                gap: 0;
+            .verify-card {
+                flex-direction: column-reverse;
             }
             .mascot-section {
                 padding: 20px;
+                min-height: 200px;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="register-card">
-        <!-- Left Half: Registration Form -->
+    <div class="verify-card">
+        <!-- Left Half: Verification Form -->
         <div class="form-section">
-            <h2>Create Account</h2>
-            <p>Join Quant-Ease and automate your trading edge.</p>
+            <h2>Verify Email</h2>
+            <p class="subtitle">Enter the 4-digit code sent to your inbox.</p>
 
-            <div id="error-message"></div>
+            <div class="spam-notice">
+                (Please check your spam folder in case you didn't find your code from Quant-Ease)
+            </div>
 
-            <form id="registerForm" type = "submit" method = "POST">
-                <div class="form-row">
-                    <div class="input-group">
-                        <label for="firstname">First Name</label>
-                        <input type="text" id="firstname" name="firstname" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="lastname">Last Name</label>
-                        <input type="text" id="lastname" name="lastname" required>
-                    </div>
+            <div id="error-message" role="alert" aria-live="polite"></div>
+
+            <form id="verifyForm">
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="name@example.com" autocomplete="email" autofocus>
                 </div>
                 
                 <div class="input-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
+                    <label for="code">4-Digit Code</label>
+                    <input type="text" id="code" name="code" required maxlength="4" pattern="\d{4}" placeholder="1234" autocomplete="one-time-code">
                 </div>
                 
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <button type="submit" class="register-btn" id="submitBtn">Register</button>
+                <button type="submit" class="verify-btn" id="submitBtn">Verify Account</button>
             </form>
         </div>
 
         <!-- Right Half: Mascot -->
         <div class="mascot-section">
-            <img src="mascot.svg" alt="Quant-Ease Mascot">
+            <img src="../mascot.svg" alt="QuantEase mascot">
         </div>
     </div>
 
     <script>
-        document.getElementById('registerForm').addEventListener('submit', async function(event) {
-            // Prevent the default HTML form submission
+        document.getElementById('verifyForm').addEventListener('submit', async function(event) {
+            // Prevent standard form submission
             event.preventDefault();
 
-            // Clear previous errors and update button state
+            // Setup UI states
             const errorDiv = document.getElementById('error-message');
             const submitBtn = document.getElementById('submitBtn');
             errorDiv.style.display = 'none';
-            submitBtn.textContent = 'Processing...';
+            submitBtn.textContent = 'Verifying...';
             submitBtn.disabled = true;
 
-            // Gather data from the form
-            const formData = {
-                f_name: document.getElementById('firstname').value,
-                l_name: document.getElementById('lastname').value,
+            // Gather inputs (code is extracted as a string)
+            const payload = {
                 email: document.getElementById('email').value,
-                password: document.getElementById('password').value
+                code: document.getElementById('code').value
             };
 
             try {
-                // Send JSON request to FastAPI endpoint
-                const response = await fetch('http://127.0.0.1:8000/register', {
+                // Send JSON request to local FastAPI backend
+                const response = await fetch('http://127.0.0.1:8000/verify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(payload)
                 });
 
-                if (response.ok){
-                    // Success! Redirect to the verification page
-                    window.location.href = 'verify_email.html';
+                if (response.status === 200) {
+                    // Success! Route the user to login
+                    window.location.href = 'login.html';
                 } else {
-                    // Handle failure (e.g., email already exists, weak password)
-                    // FastAPI typically returns errors in a "detail" key
+                    // Handle 500 or other failure statuses
                     const errorData = await response.json();
-                    const errorMessage = errorData.detail || errorData.message || 'Registration failed. Please try again.';
+                    const errorMessage = errorData.detail || errorData.message || 'Verification failed. Please check your code and try again.';
                     
                     errorDiv.textContent = errorMessage;
                     errorDiv.style.display = 'block';
                 }
             } catch (error) {
-                // Handle network errors (e.g., backend is down)
-                errorDiv.textContent = 'Network error. Please ensure the server is running and try again.';
+                // Handle network/connection errors
+                errorDiv.textContent = 'Network error. Could not connect to the backend server.';
                 errorDiv.style.display = 'block';
             } finally {
-                // Reset button state
-                submitBtn.textContent = 'Register';
+                // Restore button state
+                submitBtn.textContent = 'Verify Account';
                 submitBtn.disabled = false;
             }
         });
