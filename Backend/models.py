@@ -48,3 +48,26 @@ class MACD(BaseModel):
     symbol :  Annotated[str, Field(..., description="SYMBOL of the coin whose data will be used in backtest like BTCUSDT, ETHUSDT")]
     time_frame: Annotated[str, Field(..., description="Timeframe for data of SYMBOL of the coin used in backtest like for 1-minute timeframe is will be 1m, for one-hour it will be 1h")]
     capital : Annotated[float, Field(..., description="Initial capital for the backtest")]
+
+class Bollinger(BaseModel):
+    strategy_name : Annotated[str, Field(..., description="Name of the Strategy or can be indicator name as well like double-EMA, MACD, RSI")]
+    ema_length : Annotated[int, Field(..., description="moving average period for the Bollinger Bands strategy")]
+    std_dev : Annotated[int, Field(..., description="Standard deviation period for the Bollinger Bands strategy")]
+    risk : Annotated[float, Field(..., description="risk percentage of the total capital per trade")]
+    reward : Annotated[float, Field(..., description="profit percentage of the total capital per trade")]
+    market_type : Annotated[Literal["spot", "futures"], Field(..., description="Market type  for backtest example : Spot Market or Futures Market")]
+    symbol :  Annotated[str, Field(..., description="SYMBOL of the coin whose data will be used in backtest like BTCUSDT, ETHUSDT")]
+    time_frame: Annotated[str, Field(..., description="Timeframe for data of SYMBOL of the coin used in backtest like for 1-minute timeframe is will be 1m, for one-hour it will be 1h")]
+    capital : Annotated[float, Field(..., description="Initial capital for the backtest")]
+
+class RSI(BaseModel):
+    strategy_name : Annotated[str, Field(..., description="Name of the Strategy or can be indicator name as well like double-EMA, MACD, RSI")]
+    rsi_length : Annotated[int, Field(..., description="moving average period for the RSI strategy")]
+    rsi_oversold : Annotated[int, Field(..., description="Oversold level for the RSI strategy")]
+    rsi_overbought : Annotated[int, Field(..., description="Overbought level for the RSI strategy")]
+    risk : Annotated[float, Field(..., description="risk percentage of the total capital per trade")]
+    reward : Annotated[float, Field(..., description="profit percentage of the total capital per trade")]
+    market_type : Annotated[Literal["spot", "futures"], Field(..., description="Market type  for backtest example : Spot Market or Futures Market")]
+    symbol :  Annotated[str, Field(..., description="SYMBOL of the coin whose data will be used in backtest like BTCUSDT, ETHUSDT")]
+    time_frame: Annotated[str, Field(..., description="Timeframe for data of SYMBOL of the coin used in backtest like for 1-minute timeframe is will be 1m, for one-hour it will be 1h")]
+    capital : Annotated[float, Field(..., description="Initial capital for the backtest")]

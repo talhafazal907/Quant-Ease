@@ -224,3 +224,5 @@ Backend/Backtesting_Engine/test.py
 Backend/Backtesting_Engine/test.ipynb
 Backend/Backtesting_Engine/.env
 PROJECT_OVERVIEW.md
+Backend/equity_curves
+Frontend/design.md

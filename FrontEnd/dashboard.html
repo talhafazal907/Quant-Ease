@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Configure and review indicator-based backtests in QuantEase.">
+  <title>QuantEase | Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --navy: #020d20;
+      --navy-2: #081a32;
+      --green: #64a31e;
+      --green-dark: #3d7c1f;
+      --paper: #f4f4f4;
+      --white: #fff;
+      --ink: #16253b;
+      --muted: #728096;
+      --line: #dce3ea;
+      --success: #438316;
+      --danger: #bd3c3c;
+      --shadow: 0 12px 35px rgba(2, 13, 32, .08)
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Open Sans', sans-serif;
+      line-height: 1.5
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 244px 1fr
+    }
+
+    .sidebar {
+      background: var(--navy);
+      padding: 27px 18px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #ced8e5
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #fff;
+      font: 700 22px/1 Montserrat;
+      text-decoration: none;
+      letter-spacing: -1.2px;
+      padding: 0 10px
+    }
+
+    .brand img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      filter: brightness(0) invert(1)
+    }
+
+    .brand span span {
+      color: #95ca5d
+    }
+
+    .workspace-label {
+      color: #71839a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      margin: 52px 10px 11px
+    }
+
+    .side-nav {
+      display: grid;
+      gap: 5px
+    }
+
+    .side-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 7px;
+      color: #abb9c9;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none
+    }
+
+    .side-nav a:hover,
+    .side-nav a.active {
+      background: rgba(255, 255, 255, .09);
+      color: #fff
+    }
+
+    .nav-icon {
+      width: 18px;
+      text-align: center;
+      color: #93c95a;
+      font-size: 16px
+    }
+
+    .sidebar-bottom {
+      margin-top: auto
+    }
+
+    .account-card {
+      border-top: 1px solid rgba(255, 255, 255, .13);
+      padding: 18px 10px 0
+    }
+
+    .account-name {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .account-email {
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #8293a7;
+      margin-top: 2px
+    }
+
+    .signout {
+      border: 0;
+      background: transparent;
+      color: #aebdce;
+      font: 600 12px 'Open Sans';
+      cursor: pointer;
+      padding: 17px 0 0
+    }
+
+    .signout:hover {
+      color: #fff
+    }
+
+    .main {
+      min-width: 0
+    }
+
+    .topbar {
+      height: 76px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      padding: 0 clamp(22px, 4vw, 54px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .breadcrumb {
+      color: #7d8a9c;
+      font-size: 13px
+    }
+
+    .breadcrumb b {
+      color: var(--ink)
+    }
+
+    .top-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #657488;
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .top-status i {
+      display: block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green)
+    }
+
+    .content {
+      max-width: 1320px;
+      margin: auto;
+      padding: 42px clamp(22px, 4vw, 54px) 60px
+    }
+
+    .page-intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 30px
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--green-dark);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.45px
+    }
+
+    .page-intro h1,
+    h2,
+    h3 {
+      font-family: Montserrat, sans-serif
+    }
+
+    .page-intro h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(27px, 3vw, 37px);
+      letter-spacing: -1.8px
+    }
+
+    .page-intro p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px
+    }
+
+    .last-run {
+      display: none;
+      background: #eaf5dd;
+      border-radius: 20px;
+      color: var(--success);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 7px 11px
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 400px) 1fr;
+      gap: 25px;
+      align-items: start
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow)
+    }
+
+    .config-panel {
+      padding: 25px
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 10px;
+      margin-bottom: 23px
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 17px;
+      letter-spacing: -.5px
+    }
+
+    .panel-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    .step {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #edf5e5;
+      color: var(--green-dark);
+      font: 700 11px Montserrat
+    }
+
+    .form-section {
+      border-top: 1px solid #edf0f3;
+      padding-top: 19px;
+      margin-top: 19px
+    }
+
+    .section-title {
+      color: #758296;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.15px;
+      margin: 0 0 14px
+    }
+
+    .input-group {
+      margin-bottom: 14px
+    }
+
+    .input-group label {
+      display: block;
+      color: #35445a;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px
+    }
+
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      border: 1px solid #cfd8e1;
+      border-radius: 6px;
+      color: var(--ink);
+      background: #fff;
+      font: 500 13px 'Open Sans';
+      height: 40px;
+      padding: 0 11px;
+      outline: none;
+      transition: .2s border, .2s box-shadow
+    }
+
+    .input-group input:focus,
+    .input-group select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(100, 163, 30, .13)
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .dynamic-fields {
+      display: grid;
+      gap: 0
+    }
+
+    .strategy-note {
+      background: #f3f7ef;
+      border-left: 3px solid var(--green);
+      border-radius: 4px;
+      color: #5d6d59;
+      font-size: 11px;
+      padding: 9px 10px;
+      margin-top: 3px
+    }
+
+    .run-button {
+      width: 100%;
+      min-height: 45px;
+      border: 0;
+      border-radius: 7px;
+      background: var(--green);
+      color: #fff;
+      cursor: pointer;
+      font: 700 14px Montserrat;
+      margin-top: 9px;
+      transition: .2s background, .2s transform
+    }
+
+    .run-button:hover:not(:disabled) {
+      background: var(--green-dark);
+      transform: translateY(-1px)
+    }
+
+    .run-button:disabled {
+      background: #9eb7a0;
+      cursor: wait
+    }
+
+    .form-error {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 11px;
+      border-radius: 6px;
+      background: #fceceb;
+      border-left: 3px solid var(--danger);
+      color: #a62d2d;
+      font-size: 12px
+    }
+
+    .results-area {
+      display: grid;
+      gap: 25px
+    }
+
+    .empty-state {
+      min-height: 495px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 45px;
+      background: linear-gradient(145deg, #fff, #f8faf8)
+    }
+
+    .empty-icon {
+      width: 60px;
+      height: 60px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 17px;
+      background: #edf5e5;
+      border-radius: 17px;
+      color: var(--green-dark);
+      font-size: 28px
+    }
+
+    .empty-state h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 20px;
+      letter-spacing: -.6px
+    }
+
+    .empty-state p {
+      max-width: 320px;
+      margin: 8px auto 0;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .results {
+      display: none
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px
+    }
+
+    .metric {
+      padding: 17px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: 0 5px 17px rgba(2, 13, 32, .04)
+    }
+
+    .metric span {
+      display: block;
+      color: #7b899b;
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 7px;
+      color: var(--navy);
+      font: 700 clamp(18px, 2vw, 25px) Montserrat;
+      letter-spacing: -1px
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 3px;
+      color: #8190a1;
+      font-size: 10px
+    }
+
+    .positive {
+      color: var(--success) !important
+    }
+
+    .negative {
+      color: var(--danger) !important
+    }
+
+    .chart-panel {
+      padding: 24px
+    }
+
+    .chart-panel h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 17px;
+      letter-spacing: -.5px
+    }
+
+    .chart-panel p {
+      margin: 4px 0 16px;
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    .equity-chart {
+      height: 305px;
+      width: 100%
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap: 25px
+    }
+
+    .summary-panel {
+      padding: 24px
+    }
+
+    .summary-panel h2 {
+      font-size: 16px;
+      margin: 0 0 16px;
+      color: var(--navy)
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 13px
+    }
+
+    .detail-list div {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      border-bottom: 1px solid #edf0f3;
+      padding-bottom: 10px;
+      color: #728096;
+      font-size: 12px
+    }
+
+    .detail-list b {
+      color: #273850;
+      font-weight: 700
+    }
+
+    .status-box {
+      background: var(--navy);
+      border-radius: 12px;
+      padding: 24px;
+      color: #fff
+    }
+
+    .status-box .eyebrow {
+      color: #9ecb70
+    }
+
+    .status-box h2 {
+      font-size: 18px;
+      margin: 0 0 9px
+    }
+
+    .status-box p {
+      color: #bbc7d5;
+      font-size: 12px;
+      margin: 0
+    }
+
+    .status-box span {
+      display: inline-flex;
+      margin-top: 18px;
+      align-items: center;
+      gap: 6px;
+      color: #9ed069;
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    .status-box i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #8ec756
+    }
+
+    .mobile-brand {
+      display: none
+    }
+
+    .loading {
+      display: none;
+      align-items: center;
+      gap: 9px;
+      color: #657587;
+      font-size: 12px;
+      font-weight: 700
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #dce7d0;
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .7s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @media(max-width:1050px) {
+      .workspace-grid {
+        grid-template-columns: 330px 1fr
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .summary-row {
+        grid-template-columns: 1fr
+      }
+
+      .sidebar {
+        width: 215px
+      }
+
+      .app-shell {
+        grid-template-columns: 215px 1fr
+      }
+    }
+
+    @media(max-width:760px) {
+      .app-shell {
+        display: block
+      }
+
+      .sidebar {
+        display: none
+      }
+
+      .mobile-brand {
+        height: 66px;
+        padding: 0 20px;
+        background: var(--navy);
+        display: flex;
+        align-items: center
+      }
+
+      .topbar {
+        height: 57px;
+        padding: 0 20px
+      }
+
+      .top-status {
+        font-size: 11px
+      }
+
+      .content {
+        padding: 30px 16px 45px
+      }
+
+      .page-intro {
+        align-items: start;
+        flex-direction: column;
+        margin-bottom: 22px
+      }
+
+      .workspace-grid {
+        grid-template-columns: 1fr
+      }
+
+      .empty-state {
+        min-height: 340px
+      }
+
+      .chart-panel {
+        padding: 18px
+      }
+
+      .equity-chart {
+        height: 250px
+      }
+
+      .last-run {
+        display: none !important
+      }
+    }
+
+    @media(max-width:430px) {
+      .two-col {
+        grid-template-columns: 1fr
+      }
+
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .metric {
+        padding: 14px
+      }
+
+      .metric strong {
+        font-size: 19px
+      }
+
+      .config-panel {
+        padding: 20px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mobile-brand"><a class="brand" href="index.html"><img src="logo-01.png"
+        alt=""><span>Quant<span>Ease</span></span></a></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="index.html"><img src="logo-01.png" alt=""><span>Quant<span>Ease</span></span></a>
+      <p class="workspace-label">WORKSPACE</p>
+      <nav class="side-nav" aria-label="Workspace navigation">
+        <a class="active" href="dashboard.html"><span class="nav-icon">⌁</span>Backtest</a>
+        <a href="#strategy-library"><span class="nav-icon">◫</span>My strategies</a>
+        <a href="#results"><span class="nav-icon">◌</span>Results</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="account-card">
+          <div class="account-name" id="accountName">QuantEase member</div>
+          <div class="account-email" id="accountEmail">Authenticated workspace</div><button class="signout"
+            type="button" id="signoutButton">Sign out →</button>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb"><b>Workspace</b> &nbsp;/&nbsp; New backtest</div>
+        <div class="top-status"><i></i> Secure session</div>
+      </header>
+      <div class="content">
+        <section class="page-intro">
+          <div>
+            <p class="eyebrow">INDICATOR-BASED RESEARCH</p>
+            <h1>Build a backtest</h1>
+            <p>Define your indicator rules, risk parameters, and market context.</p>
+          </div><span class="last-run" id="lastRun">✓ Backtest completed</span>
+        </section>
+        <div class="workspace-grid">
+          <section class="panel config-panel" id="strategy-library" aria-labelledby="configTitle">
+            <div class="panel-head">
+              <div>
+                <h2 id="configTitle">Configuration</h2>
+                <p>Choose a supported indicator strategy.</p>
+              </div><span class="step">01</span>
+            </div>
+            <form id="backtestForm" novalidate>
+              <div class="input-group"><label for="strategy">Indicator strategy</label><select id="strategy"
+                  name="strategy_name">
+                  <option value="double-ema">Double EMA crossover</option>
+                  <option value="macd">MACD crossover</option>
+                  <option value="bollinger_band">Bollinger Band</option>
+                  <option value="rsi">Relative Strength Index (RSI)</option>
+                </select></div>
+              <div class="form-section">
+                <p class="section-title">INDICATOR PARAMETERS</p>
+                <div id="dynamicFields" class="dynamic-fields"></div>
+              </div>
+              <div class="form-section">
+                <p class="section-title">MARKET &amp; RISK</p>
+                <div class="two-col">
+                  <div class="input-group"><label for="marketType">Market type</label><select id="marketType"
+                      name="market_type">
+                      <option value="spot">Spot</option>
+                      <option value="futures">Futures</option>
+                    </select></div>
+                  <div class="input-group"><label for="symbol">Symbol</label><input id="symbol" name="symbol"
+                      value="BTCUSDT" required maxlength="20" autocomplete="off"></div>
+                </div>
+                <div class="two-col">
+                  <div class="input-group"><label for="timeframe">Timeframe</label><select id="timeframe"
+                      name="time_frame">
+                      <option value="1m">1 minute</option>
+                      <option value="5m" selected>5 minutes</option>
+                      <option value="15m">15 minutes</option>
+                      <option value="1h">1 hour</option>
+                      <option value="4h">4 hours</option>
+                      <option value="1d">1 day</option>
+                    </select></div>
+                  <div class="input-group"><label for="capital">Initial capital</label><input id="capital"
+                      name="capital" type="number" value="1000" required></div>
+                </div>
+                <div class="two-col">
+                  <div class="input-group"><label for="risk">Risk per trade</label><input id="risk" name="risk"
+                      type="number" step="0.01" value="0.01" required></div>
+                  <div class="input-group"><label for="reward">Reward target</label><input id="reward" name="reward"
+                      type="number" step="0.01" value="0.02" required></div>
+                </div>
+                <p class="strategy-note">Risk and reward use decimal values: <b>0.01 = 1%</b>.</p>
+              </div>
+              <button class="run-button" id="runButton" type="submit">Run backtest <span
+                  aria-hidden="true">→</span></button>
+              <div class="loading" id="loading"><span class="spinner"></span> Running simulation on historical data…
+              </div>
+              <div class="form-error" id="formError" role="alert" aria-live="polite"></div>
+            </form>
+          </section>
+          <section class="results-area" id="results" aria-live="polite">
+            <div class="panel empty-state" id="emptyState">
+              <div>
+                <div class="empty-icon">↗</div>
+                <h2>Your results will appear here</h2>
+                <p>Set up an indicator strategy and run a backtest to review performance and the equity curve.</p>
+              </div>
+            </div>
+            <div class="results" id="resultsContent">
+              <div class="metrics-grid">
+                <article class="metric"><span>Final capital</span><strong id="finalCapital">—</strong><small
+                    id="netChange">vs. initial capital</small></article>
+                <article class="metric"><span>Total trades</span><strong id="totalTrades">—</strong><small>Completed
+                    positions</small></article>
+                <article class="metric"><span>Win rate</span><strong id="winRate">—</strong><small id="winLoss">Closed
+                    trades</small></article>
+                <article class="metric"><span>Max drawdown</span><strong id="maxDrawdown">—</strong><small>From equity
+                    peak</small></article>
+              </div>
+              <article class="panel chart-panel">
+                <h2>Equity curve</h2>
+                <p>Account value across the completed backtest.</p>
+                <div class="equity-chart" id="equityChart"></div>
+              </article>
+              <div class="summary-row">
+                <article class="panel summary-panel">
+                  <h2>Backtest summary</h2>
+                  <div class="detail-list">
+                    <div><span>Strategy</span><b id="summaryStrategy">—</b></div>
+                    <div><span>Market</span><b id="summaryMarket">—</b></div>
+                    <div><span>Symbol / timeframe</span><b id="summarySymbol">—</b></div>
+                    <div><span>Initial capital</span><b id="summaryCapital">—</b></div>
+                  </div>
+                </article>
+                <article class="status-box">
+                  <p class="eyebrow">EXECUTION STATUS</p>
+                  <h2>Simulation complete</h2>
+                  <p>Your run was saved to your QuantEase workspace.</p><span><i></i> Historical data processed</span>
+                </article>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    const API_BASE = 'http://127.0.0.1:8000';
+    const STRATEGY_CONFIGS = {
+      'double-ema': {
+        endpoint: '/backtest_two_ema_crossover', displayName: 'Double EMA crossover', fields: [
+          { name: 'ema_short', label: 'Short EMA period', type: 'number', default: 20, min: 1, parse: Number.parseInt },
+          { name: 'ema_long', label: 'Long EMA period', type: 'number', default: 200, min: 1, parse: Number.parseInt }
+        ]
+      },
+      macd: {
+        endpoint: '/backtest_macd', displayName: 'MACD crossover', fields: [
+          { name: 'ema_fast', label: 'Fast EMA period', type: 'number', default: 12, min: 1, parse: Number.parseInt },
+          { name: 'ema_slow', label: 'Slow EMA period', type: 'number', default: 26, min: 1, parse: Number.parseInt },
+          { name: 'signal_line', label: 'Signal line period', type: 'number', default: 9, min: 1, parse: Number.parseInt }
+        ]
+      },
+      bollinger_band:{
+        endpoint: '/backtest_bollinger', displayName: 'Bollinger Band', fields: [
+          { name: 'ema_length', label: 'EMA Length', type: 'number', default: 20, min: 1, parse: Number.parseInt },
+          { name: 'std_dev', label: 'Standard Deviation', type: 'number', default: 2, min: 1, parse: Number.parseInt }
+        ]
+      },
+      rsi:{
+        endpoint: '/backtest_rsi', displayName: 'Relative Strength Index (RSI)', fields: [
+          { name: 'rsi_length', label: 'RSI Length', type: 'number', default: 14, min: 1, parse: Number.parseInt },
+          { name: 'rsi_overbought', label: 'Overbought Level', type: 'number', default: 70, min: 1, parse: Number.parseInt },
+          { name: 'rsi_oversold', label: 'Oversold Level', type: 'number', default: 30, min: 1, parse: Number.parseInt }
+        ]
+      }      
+
+    };
+
+    const strategySelect = document.getElementById('strategy');
+    const dynamicFields = document.getElementById('dynamicFields');
+    const form = document.getElementById('backtestForm');
+    const errorBox = document.getElementById('formError');
+    const runButton = document.getElementById('runButton');
+    const loading = document.getElementById('loading');
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+      window.location.replace('Auth/login.html');
+    }
+
+    function renderDynamicFields(strategyKey) {
+      dynamicFields.innerHTML = '';
+      const config = STRATEGY_CONFIGS[strategyKey];
+      if (!config) { dynamicFields.innerHTML = '<p class="strategy-note">This strategy is not available yet.</p>'; return; }
+      config.fields.forEach((field) => {
+        const group = document.createElement('div'); group.className = 'input-group';
+        const label = document.createElement('label'); label.htmlFor = field.name; label.textContent = field.label;
+        const input = document.createElement('input'); input.type = field.type; input.id = field.name; input.name = field.name; input.value = field.default; input.min = field.min; input.required = true;
+        group.append(label, input); dynamicFields.appendChild(group);
+      });
+    }
+
+    function showError(message) { errorBox.textContent = message; errorBox.style.display = 'block'; }
+    function formatCurrency(value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value); }
+    function formatPercent(value) { return `${Number(value).toFixed(2)}%`; }
+    function strategyPayload() {
+      const strategy = strategySelect.value; const config = STRATEGY_CONFIGS[strategy];
+      const payload = { strategy_name: strategy, market_type: document.getElementById('marketType').value, symbol: document.getElementById('symbol').value.trim().toUpperCase(), time_frame: document.getElementById('timeframe').value, capital: Number.parseFloat(document.getElementById('capital').value), risk: Number.parseFloat(document.getElementById('risk').value), reward: Number.parseFloat(document.getElementById('reward').value) };
+      config.fields.forEach((field) => { payload[field.name] = field.parse(document.getElementById(field.name).value); });
+      return { config, payload };
+    }
+
+    function renderResults(result, payload, config) {
+      const change = result.final_capital - payload.capital; const changePercent = payload.capital ? change / payload.capital * 100 : 0;
+      const finalCapital = document.getElementById('finalCapital'); finalCapital.textContent = formatCurrency(result.final_capital); finalCapital.className = change >= 0 ? 'positive' : 'negative';
+      document.getElementById('netChange').textContent = `${change >= 0 ? '+' : ''}${formatCurrency(change)} (${changePercent >= 0 ? '+' : ''}${formatPercent(changePercent)})`;
+      document.getElementById('totalTrades').textContent = Number(result.trades || 0).toLocaleString(); document.getElementById('winRate').textContent = formatPercent(result.win_rate || 0); document.getElementById('maxDrawdown').textContent = `-${formatPercent(Math.abs(result.max_drawdown || 0))}`;
+      document.getElementById('winLoss').textContent = result.wins !== undefined ? `${result.wins} wins · ${result.losses} losses` : 'Closed trades';
+      document.getElementById('summaryStrategy').textContent = config.displayName; document.getElementById('summaryMarket').textContent = payload.market_type === 'spot' ? 'Spot market' : 'Futures market'; document.getElementById('summarySymbol').textContent = `${payload.symbol} · ${payload.time_frame}`; document.getElementById('summaryCapital').textContent = formatCurrency(payload.capital);
+      const curve = Array.isArray(result.equity_curve) ? result.equity_curve : []; const color = change >= 0 ? '#64a31e' : '#bd3c3c';
+      Plotly.newPlot('equityChart', [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 } }, yaxis: { title: 'Equity (USD)', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
+      document.getElementById('emptyState').style.display = 'none'; document.getElementById('resultsContent').style.display = 'grid'; document.getElementById('lastRun').style.display = 'inline-flex'; document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    strategySelect.addEventListener('change', () => renderDynamicFields(strategySelect.value));
+    document.getElementById('signoutButton').addEventListener('click', () => { localStorage.removeItem('access_token'); window.location.href = 'Auth/login.html'; });
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault(); errorBox.style.display = 'none';
+      if (!token) { showError('Your session has expired. Please log in again.'); setTimeout(() => { window.location.href = 'Auth/login.html'; }, 900); return; }
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      const { config, payload } = strategyPayload(); runButton.disabled = true; runButton.textContent = 'Running backtest…'; loading.style.display = 'flex';
+      try {
+        const response = await fetch(`${API_BASE}${config.endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
+        const data = await response.json();
+        if (response.status === 401) { localStorage.removeItem('access_token'); showError('Your session has expired. Please log in again.'); setTimeout(() => { window.location.href = 'Auth/login.html'; }, 900); return; }
+        if (!response.ok) throw new Error(data.detail || data.message || 'The backtest could not be completed.');
+        renderResults(data.results || data, payload, config);
+      } catch (error) { showError(error.message || 'Unable to reach the backend. Please try again.'); }
+      finally { runButton.disabled = false; runButton.innerHTML = 'Run backtest <span aria-hidden="true">→</span>'; loading.style.display = 'none'; }
+    });
+    renderDynamicFields(strategySelect.value);
+  </script>
+</body>
+
+</html>

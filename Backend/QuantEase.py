@@ -10,7 +10,7 @@ from auth import bearer_scheme, create_access_token, decode_access_token
 
 dbh = DataBase_helper()
 
-app = FastAPI()
+app = FastAPI(title = "QuantEase Backend API", description = "This is the backend API for QuantEase App", version = "1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,7 +46,7 @@ def verify(data: Verify_User):
         return JSONResponse(status_code=500, content={"message": "Issue in Backend"})
     
 @app.post("/login")
-def login(data: Login_User):
+def login(data: Login_User, ):
     try:
         user = dbh.authenticate_user(data.email, data.password)
         if not user:
@@ -138,6 +138,90 @@ def backtest_two_ema_crossover(data: ema_crossover, user_id: int = Depends(get_c
 
 @app.post("/backtest_macd")
 def backtest_macd(data: MACD, user_id: int = Depends(get_current_user_id)):
+    try:
+        # data.model_dump() passes the validated dictionary to your engine
+        strategy_data = data.model_dump()
+        backtester = Backtesting_Engine(strategy_data)
+        results = backtester.run()
+        
+        if results["status"] == 1:
+            # Convert the array to a list right before sending the response
+            results["equity_curve"] = results["equity_curve"].tolist()
+            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+                return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
+            
+            return JSONResponse(
+                status_code=200, 
+                content={
+                    "message": "Backtest completed successfully", 
+                    "results": results
+                }
+            )
+            
+        elif results["status"] == 0:
+            # 400 is better here because the engine ran, but the input data/logic failed gracefully
+            return JSONResponse(
+                status_code=400, 
+                content={
+                    "message": "Backtest failed to execute completely", 
+                    "details": results
+                }
+            )
+            
+    except Exception as e:
+        # 500 is perfect here, as it catches real crashes
+        return JSONResponse(
+            status_code=500, 
+            content={
+                "message": "Internal Backend Issue", 
+                "error": str(e)
+            }
+        )
+
+@app.post("/backtest_bollinger")
+def backtest_bollinger(data: Bollinger, user_id: int = Depends(get_current_user_id)):
+    try:
+        # data.model_dump() passes the validated dictionary to your engine
+        strategy_data = data.model_dump()
+        backtester = Backtesting_Engine(strategy_data)
+        results = backtester.run()
+        
+        if results["status"] == 1:
+            # Convert the array to a list right before sending the response
+            results["equity_curve"] = results["equity_curve"].tolist()
+            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+                return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
+            
+            return JSONResponse(
+                status_code=200, 
+                content={
+                    "message": "Backtest completed successfully", 
+                    "results": results
+                }
+            )
+            
+        elif results["status"] == 0:
+            # 400 is better here because the engine ran, but the input data/logic failed gracefully
+            return JSONResponse(
+                status_code=400, 
+                content={
+                    "message": "Backtest failed to execute completely", 
+                    "details": results
+                }
+            )
+            
+    except Exception as e:
+        # 500 is perfect here, as it catches real crashes
+        return JSONResponse(
+            status_code=500, 
+            content={
+                "message": "Internal Backend Issue", 
+                "error": str(e)
+            }
+        )
+
+@app.post("/backtest_rsi")
+def backtest_rsi(data: RSI, user_id: int = Depends(get_current_user_id)):
     try:
         # data.model_dump() passes the validated dictionary to your engine
         strategy_data = data.model_dump()

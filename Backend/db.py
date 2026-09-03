@@ -3,6 +3,8 @@ from encrypter import Hash
 from dotenv import load_dotenv
 import os
 import json
+import numpy as np
+import uuid
 load_dotenv()
 
 class DataBase_helper:
@@ -42,16 +44,18 @@ class DataBase_helper:
     def register(self, fname, lname, email, password):
         
         try:
-            from verfier import Verify
+            """from verfier import Verify
             v = Verify()
-            code = v.send_token(email)
+            code = v.send_token(email)"""
             h = Hash()
             hash = h.create_hash(password)
-            if code and hash:
-                query = "INSERT INTO users (f_name,	l_name,	p_hash,	email, v_code) VALUES (%s, %s, %s, %s, %s)"
+            if hash:
+                query = "INSERT INTO users (f_name,	l_name,	p_hash,	email) VALUES (%s, %s, %s, %s)"
                 # Pass the variables as a tuple to execute() to safely inject them
-                self.cursor.execute(query, (fname, lname, hash, email, code))
+                self.cursor.execute(query, (fname, lname, hash, email))
                 # 3. Fixed typo: changed self.cn to self.conn
+                query = """UPDATE users SET is_verif = TRUE WHERE email = %s"""
+                self.cursor.execute(query, (email,))
                 self.conn.commit()
                 return 1
             else: 
@@ -106,10 +110,15 @@ class DataBase_helper:
             return None
 
     def save_backtest_activity(self, user_id: int, strategy_data: dict, results: dict):
-        """Persist a strategy configuration and its linked backtest result atomically."""
+        """Persist strategy configuration and store equity curve as binary .npy file on disk."""
         try:
+            # 1. Ensure target directory exists on disk
+            folder_path = r"D:\Quant-Ease\Backend\equity_curves"
+            os.makedirs(folder_path, exist_ok=True)
+
+            # 2. Insert Strategy configuration
             strategy_query = """
-                INSERT INTO strategy (s_id, Strategy_name, config_params)
+                INSERT INTO strategies (s_id, Strategy_name, config_params)
                 VALUES (%s, %s, %s)
             """
             self.cursor.execute(
@@ -122,11 +131,16 @@ class DataBase_helper:
             )
             strategy_id = self.cursor.lastrowid
 
+            # 3. Save the NumPy equity array directly to disk using the strategy_id
+            file_name = f"equity_{uuid.uuid4().hex}.npy"
+            file_path = os.path.join(folder_path, file_name)
+            np.save(file_path, results["equity_curve"])
+
+            # 4. Insert Result metrics, storing file_path in equity_data column
             result_query = """
                 INSERT INTO results
-                    (s_id, initial_capital, final_capital, Total_trades,
-                     max_drawdown, equity_data, winrate)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    (s_id, initial_capital, final_capital, Total_trades, wins, Losses, max_drawdown, equity_data, winrate)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             self.cursor.execute(
                 result_query,
@@ -135,17 +149,21 @@ class DataBase_helper:
                     strategy_data["capital"],
                     results["final_capital"],
                     results["trades"],
+                    results["wins"],
+                    results["losses"],
                     results["max_drawdown"],
-                    json.dumps(results["equity_curve"]),
+                    file_path,  # Stores path string: "D:\Quant-Ease\Backend\equity_curves\equity_strat_X.npy"
                     results["win_rate"],
                 ),
             )
             self.conn.commit()
-            return True
-        except (mysql.connector.Error, KeyError, TypeError, ValueError):
+            return 1
+            
+        except Exception as e:
             if self.conn:
                 self.conn.rollback()
-            return False
+            print(f"Database insertion failed: {e}") 
+            return None
     
     def add_reset_token(self, u_id: int, code: str):
         try:
