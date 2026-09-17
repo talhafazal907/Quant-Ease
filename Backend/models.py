@@ -71,3 +71,6 @@ class RSI(BaseModel):
     symbol :  Annotated[str, Field(..., description="SYMBOL of the coin whose data will be used in backtest like BTCUSDT, ETHUSDT")]
     time_frame: Annotated[str, Field(..., description="Timeframe for data of SYMBOL of the coin used in backtest like for 1-minute timeframe is will be 1m, for one-hour it will be 1h")]
     capital : Annotated[float, Field(..., description="Initial capital for the backtest")]
+
+class Strategy_Result_Request(BaseModel):
+    id : Annotated[int, Field(..., description="Strategy id for which user wants to fetch the results")]

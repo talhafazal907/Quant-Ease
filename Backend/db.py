@@ -9,7 +9,7 @@ load_dotenv()
 
 class DataBase_helper:
     """This class will help in performing the CRUD operations and is the middle part between the backend and the database server"""
-    def __init__(self):
+    def __init__(self, dict = True):
         try:
             self.conn = mysql.connector.connect(
                 host=os.getenv("HOST"),
@@ -17,7 +17,10 @@ class DataBase_helper:
                 password=os.getenv("PASS"), 
                 database=os.getenv("DB"),
                 port = 3306)
-            self.cursor = self.conn.cursor(dictionary= True)
+            if not dict:
+                self.cursor = self.conn.cursor()
+            else:
+                self.cursor = self.conn.cursor(dictionary=True)
         except mysql.connector.Error as err:
             self.conn = None
             self.cursor = None
@@ -39,7 +42,23 @@ class DataBase_helper:
             return self.cursor.fetchone()
         except mysql.connector.Error:
             return None
-        
+    
+    def get_user_strategies(self, user_id: int):
+        try:
+            query = "SELECT * FROM strategies WHERE s_id = %s"
+            self.cursor.execute(query, (user_id,))
+            strategies = self.cursor.fetchall()
+            return strategies
+        except mysql.connector.Error:
+            return None
+
+    def get_results_by_strategy_id(self, strategy_id: int):
+        try:
+            query = "SELECT * FROM results WHERE s_id = %s"
+            self.cursor.execute(query, (strategy_id,))
+            return self.cursor.fetchone()
+        except mysql.connector.Error:
+            return None
 
     def register(self, fname, lname, email, password):
         

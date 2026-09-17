@@ -610,6 +610,111 @@
       }
     }
 
+    .strategies-panel {
+      padding: 0;
+      overflow: hidden
+    }
+
+    .strategies-panel .panel-head {
+      padding: 25px 25px 0;
+      margin-bottom: 0
+    }
+
+    .strategies-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 25px 18px
+    }
+
+    .strategies-status {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .table-wrap {
+      overflow-x: auto
+    }
+
+    .strategies-table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    .strategies-table th,
+    .strategies-table td {
+      text-align: left;
+      padding: 13px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #edf0f3;
+      white-space: nowrap
+    }
+
+    .strategies-table th {
+      color: #758296;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.15px;
+      background: #f7faf5
+    }
+
+    .strategies-table td {
+      color: #273850;
+      font-weight: 600
+    }
+
+    .strategies-table tbody tr:hover {
+      background: #f8fbf4
+    }
+
+    .strategies-table td.muted-cell {
+      color: var(--muted);
+      font-weight: 500
+    }
+
+    .show-results-btn {
+      border: 0;
+      border-radius: 6px;
+      background: var(--green);
+      color: #fff;
+      cursor: pointer;
+      font: 700 11px Montserrat;
+      padding: 8px 12px;
+      letter-spacing: .2px
+    }
+
+    .show-results-btn:hover:not(:disabled) {
+      background: var(--green-dark)
+    }
+
+    .show-results-btn:disabled {
+      background: #9eb7a0;
+      cursor: wait
+    }
+
+    .strategies-empty,
+    .strategies-error {
+      padding: 42px 25px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .strategies-error {
+      display: none;
+      color: #a62d2d;
+      background: #fceceb;
+      border-top: 1px solid #f3d0ce;
+      text-align: left
+    }
+
+    .saved-results {
+      display: none;
+      margin-top: 25px
+    }
+
     @media(max-width:1050px) {
       .workspace-grid {
         grid-template-columns: 330px 1fr
@@ -721,9 +826,8 @@
       <a class="brand" href="index.html"><img src="logo-01.png" alt=""><span>Quant<span>Ease</span></span></a>
       <p class="workspace-label">WORKSPACE</p>
       <nav class="side-nav" aria-label="Workspace navigation">
-        <a class="active" href="dashboard.html"><span class="nav-icon">⌁</span>Backtest</a>
-        <a href="#strategy-library"><span class="nav-icon">◫</span>My strategies</a>
-        <a href="#results"><span class="nav-icon">◌</span>Results</a>
+        <a class="active" href="dashboard.html" id="navBacktest"><span class="nav-icon">⌁</span>Backtest</a>
+        <a href="#my-strategies" id="navStrategies"><span class="nav-icon">◫</span>My strategies</a>
       </nav>
       <div class="sidebar-bottom">
         <div class="account-card">
@@ -735,10 +839,10 @@
     </aside>
     <main class="main">
       <header class="topbar">
-        <div class="breadcrumb"><b>Workspace</b> &nbsp;/&nbsp; New backtest</div>
+        <div class="breadcrumb" id="breadcrumb"><b>Workspace</b> &nbsp;/&nbsp; New backtest</div>
         <div class="top-status"><i></i> Secure session</div>
       </header>
-      <div class="content">
+      <div class="content" id="backtestView">
         <section class="page-intro">
           <div>
             <p class="eyebrow">INDICATOR-BASED RESEARCH</p>
@@ -849,6 +953,62 @@
           </section>
         </div>
       </div>
+      <div class="content" id="strategiesView" hidden>
+        <section class="page-intro">
+          <div>
+            <p class="eyebrow">SAVED RESEARCH</p>
+            <h1>My strategies</h1>
+            <p>Review every indicator strategy you have already backtested.</p>
+          </div>
+        </section>
+        <section class="panel strategies-panel" id="my-strategies" aria-labelledby="strategiesTitle">
+          <div class="panel-head">
+            <div>
+              <h2 id="strategiesTitle">Backtested strategies</h2>
+              <p>Each row is a saved configuration from your workspace.</p>
+            </div><span class="step">02</span>
+          </div>
+          <div class="strategies-toolbar">
+            <span class="strategies-status" id="strategiesStatus">Loading your strategies…</span>
+            <div class="loading" id="strategiesLoading"><span class="spinner"></span> Fetching strategies…</div>
+          </div>
+          <div class="strategies-error" id="strategiesError" role="alert" aria-live="polite"></div>
+          <div class="table-wrap">
+            <table class="strategies-table" id="strategiesTable">
+              <thead>
+                <tr>
+                  <th>Strategy</th>
+                  <th>Symbol</th>
+                  <th>Timeframe</th>
+                  <th>Market</th>
+                  <th>Capital</th>
+                  <th>Created</th>
+                  <th>Results</th>
+                </tr>
+              </thead>
+              <tbody id="strategiesTableBody"></tbody>
+            </table>
+          </div>
+          <div class="strategies-empty" id="strategiesEmpty" hidden>No backtested strategies yet. Run a backtest to see it here.</div>
+        </section>
+        <section class="saved-results" id="savedResults" aria-live="polite">
+          <div class="metrics-grid">
+            <article class="metric"><span>Final capital</span><strong id="savedFinalCapital">—</strong><small
+                id="savedNetChange">vs. initial capital</small></article>
+            <article class="metric"><span>Total trades</span><strong id="savedTotalTrades">—</strong><small>Completed
+                positions</small></article>
+            <article class="metric"><span>Win rate</span><strong id="savedWinRate">—</strong><small
+                id="savedWinLoss">Closed trades</small></article>
+            <article class="metric"><span>Max drawdown</span><strong id="savedMaxDrawdown">—</strong><small>From equity
+                peak</small></article>
+          </div>
+          <article class="panel chart-panel">
+            <h2>Equity curve</h2>
+            <p>Account value from the stored backtest result.</p>
+            <div class="equity-chart" id="savedEquityChart"></div>
+          </article>
+        </section>
+      </div>
     </main>
   </div>
   <script>
@@ -945,6 +1105,150 @@
       } catch (error) { showError(error.message || 'Unable to reach the backend. Please try again.'); }
       finally { runButton.disabled = false; runButton.innerHTML = 'Run backtest <span aria-hidden="true">→</span>'; loading.style.display = 'none'; }
     });
+
+    const navBacktest = document.getElementById('navBacktest');
+    const navStrategies = document.getElementById('navStrategies');
+    const backtestView = document.getElementById('backtestView');
+    const strategiesView = document.getElementById('strategiesView');
+    const strategiesTableBody = document.getElementById('strategiesTableBody');
+    const strategiesStatus = document.getElementById('strategiesStatus');
+    const strategiesLoading = document.getElementById('strategiesLoading');
+    const strategiesError = document.getElementById('strategiesError');
+    const strategiesEmpty = document.getElementById('strategiesEmpty');
+    const savedResults = document.getElementById('savedResults');
+    let savedStrategies = [];
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    }
+
+    function showStrategiesError(message) {
+      strategiesError.textContent = message;
+      strategiesError.style.display = 'block';
+    }
+
+    function showBacktestView() {
+      navBacktest.classList.add('active');
+      navStrategies.classList.remove('active');
+      backtestView.hidden = false;
+      strategiesView.hidden = true;
+      document.getElementById('breadcrumb').innerHTML = '<b>Workspace</b> &nbsp;/&nbsp; New backtest';
+    }
+
+    function showStrategiesView() {
+      navStrategies.classList.add('active');
+      navBacktest.classList.remove('active');
+      backtestView.hidden = true;
+      strategiesView.hidden = false;
+      document.getElementById('breadcrumb').innerHTML = '<b>Workspace</b> &nbsp;/&nbsp; My strategies';
+    }
+
+    function renderSavedResults(result, payload, config) {
+      const initialCapital = Number(result.initial_capital != null ? result.initial_capital : payload.capital);
+      const change = result.final_capital - initialCapital;
+      const changePercent = initialCapital ? change / initialCapital * 100 : 0;
+      const finalCapital = document.getElementById('savedFinalCapital');
+      finalCapital.textContent = formatCurrency(result.final_capital);
+      finalCapital.className = change >= 0 ? 'positive' : 'negative';
+      document.getElementById('savedNetChange').textContent = `${change >= 0 ? '+' : ''}${formatCurrency(change)} (${changePercent >= 0 ? '+' : ''}${formatPercent(changePercent)})`;
+      document.getElementById('savedTotalTrades').textContent = Number(result.trades || 0).toLocaleString();
+      document.getElementById('savedWinRate').textContent = formatPercent(result.win_rate || 0);
+      document.getElementById('savedMaxDrawdown').textContent = `-${formatPercent(Math.abs(result.max_drawdown || 0))}`;
+      document.getElementById('savedWinLoss').textContent = result.wins !== undefined ? `${result.wins} wins · ${result.losses} losses` : 'Closed trades';
+      const curve = Array.isArray(result.equity_curve) ? result.equity_curve : [];
+      const color = change >= 0 ? '#64a31e' : '#bd3c3c';
+      savedResults.style.display = 'grid';
+      savedResults.style.gap = '25px';
+      Plotly.newPlot('savedEquityChart', [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 } }, yaxis: { title: 'Equity (USD)', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
+      savedResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderStrategiesTable(strategies) {
+      strategiesTableBody.innerHTML = '';
+      savedStrategies = Array.isArray(strategies) ? strategies : [];
+      if (!savedStrategies.length) {
+        strategiesEmpty.hidden = false;
+        strategiesStatus.textContent = '0 saved strategies';
+        return;
+      }
+      strategiesEmpty.hidden = true;
+      strategiesStatus.textContent = `${savedStrategies.length} saved strateg${savedStrategies.length === 1 ? 'y' : 'ies'}`;
+      savedStrategies.forEach((strategy) => {
+        const params = strategy.config_params || {};
+        const config = STRATEGY_CONFIGS[strategy.strategy_name] || {};
+        const created = strategy.created_at ? new Date(strategy.created_at).toLocaleString() : '—';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${escapeHtml(config.displayName || strategy.strategy_name || '—')}</td>
+          <td>${escapeHtml(params.symbol || '—')}</td>
+          <td class="muted-cell">${escapeHtml(params.time_frame || '—')}</td>
+          <td class="muted-cell">${escapeHtml(params.market_type || '—')}</td>
+          <td>${params.capital != null ? escapeHtml(formatCurrency(params.capital)) : '—'}</td>
+          <td class="muted-cell">${escapeHtml(created)}</td>
+          <td><button class="show-results-btn" type="button" data-strategy-id="${escapeHtml(strategy.id)}">Show results</button></td>
+        `;
+        strategiesTableBody.appendChild(row);
+      });
+    }
+
+    async function loadStrategies() {
+      strategiesError.style.display = 'none';
+      strategiesLoading.style.display = 'flex';
+      strategiesStatus.textContent = 'Loading your strategies…';
+      savedResults.style.display = 'none';
+      try {
+        const response = await fetch(`${API_BASE}/my_strategies`, { method: 'GET', headers: { Authorization: `Bearer ${token}` } });
+        const data = await response.json();
+        if (response.status === 401) { localStorage.removeItem('access_token'); window.location.href = 'Auth/login.html'; return; }
+        if (!response.ok) throw new Error(data.detail || data.message || 'Unable to load strategies.');
+        renderStrategiesTable(data.strategies || []);
+      } catch (error) {
+        renderStrategiesTable([]);
+        showStrategiesError(error.message || 'Unable to reach the backend. Please try again.');
+      } finally {
+        strategiesLoading.style.display = 'none';
+      }
+    }
+
+    navBacktest.addEventListener('click', (event) => {
+      event.preventDefault();
+      showBacktestView();
+    });
+
+    navStrategies.addEventListener('click', async (event) => {
+      event.preventDefault();
+      showStrategiesView();
+      await loadStrategies();
+    });
+
+    strategiesTableBody.addEventListener('click', async (event) => {
+      const button = event.target.closest('.show-results-btn');
+      if (!button) return;
+      const strategyId = Number(button.dataset.strategyId);
+      const strategy = savedStrategies.find((item) => Number(item.id) === strategyId);
+      button.disabled = true;
+      button.textContent = 'Loading…';
+      strategiesError.style.display = 'none';
+      try {
+        const response = await fetch(`${API_BASE}/strategy_results`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ strategy_id: strategyId })
+        });
+        const data = await response.json();
+        if (response.status === 401) { localStorage.removeItem('access_token'); window.location.href = 'Auth/login.html'; return; }
+        if (!response.ok) throw new Error(data.detail || data.message || 'Unable to load strategy results.');
+        const payload = strategy?.config_params || {};
+        const config = STRATEGY_CONFIGS[strategy?.strategy_name] || { displayName: strategy?.strategy_name || 'Strategy' };
+        renderSavedResults(data.results || data, payload, config);
+      } catch (error) {
+        showStrategiesError(error.message || 'Unable to reach the backend. Please try again.');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Show results';
+      }
+    });
+
     renderDynamicFields(strategySelect.value);
   </script>
 </body>

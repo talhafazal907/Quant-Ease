@@ -7,6 +7,9 @@ from encrypter import Hash
 from fastapi.middleware.cors import CORSMiddleware
 from Backtesting_Engine.backtesting_engine import Backtesting_Engine
 from auth import bearer_scheme, create_access_token, decode_access_token
+import json
+import os
+import numpy as np
 
 dbh = DataBase_helper()
 
@@ -261,3 +264,72 @@ def backtest_rsi(data: RSI, user_id: int = Depends(get_current_user_id)):
                 "error": str(e)
             }
         )
+  
+
+@app.get("/my_strategies")
+def get_my_strategies(user_id: int = Depends(get_current_user_id)):
+    try:
+        if not dbh.fetch_user_by_id(user_id):
+            return JSONResponse(status_code=404, content={"message": "User not found"})
+            
+        raw_strategies = dbh.get_user_strategies(user_id)
+        parsed_strategies = []
+        
+        for row in raw_strategies:
+            # Decode the bytes object and parse the JSON string into a Python dict
+            config_dict = json.loads(row['config_params'].decode('utf-8'))
+            
+            parsed_strategies.append({
+                "id": row['id'],
+                "strategy_name": row['Strategy_name'],
+                "config_params": config_dict,
+                "created_at": row['created_at'].isoformat() # Convert datetime to string
+            })
+            
+        return JSONResponse(
+            status_code=200, 
+            content={
+                "message": "Strategies fetched successfully", 
+                "strategies": parsed_strategies
+            }
+        )
+        
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": "Issue in Backend", "error": str(e)})
+
+
+def _json_number(value):
+    if value is None:
+        return None
+    return float(value)
+
+
+@app.post("/strategy_results")
+def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(get_current_user_id)):
+    try:
+        row = dbh.get_results_by_strategy_id(data.strategy_id)
+        if not row:
+            return JSONResponse(status_code=404, content={"message": "Results not found for this strategy"})
+
+        equity_path = row.get("equity_data")
+        if isinstance(equity_path, bytes):
+            equity_path = equity_path.decode("utf-8")
+        equity_curve = []
+        if equity_path and os.path.isfile(equity_path):
+            equity_curve = np.load(equity_path).tolist()
+
+        results = {
+            "r_id": row.get("r_id"),
+            "s_id": row.get("s_id"),
+            "initial_capital": _json_number(row.get("initial_capital")),
+            "final_capital": _json_number(row.get("final_capital")),
+            "trades": int(row.get("Total_trades") or 0),
+            "wins": int(row.get("wins") or 0),
+            "losses": int(row.get("Losses") or 0),
+            "max_drawdown": _json_number(row.get("max_drawdown")),
+            "win_rate": _json_number(row.get("winrate")),
+            "equity_curve": equity_curve,
+        }
+        return JSONResponse(status_code=200, content={"message": "Results fetched successfully", "results": results})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": "Issue in Backend", "error": str(e)})
