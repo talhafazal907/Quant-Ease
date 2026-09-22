@@ -79,6 +79,49 @@ class Indicators:
             print(f"Error in add_rsi: {e}")
             return {"status": 0, "message": str(e)}
 
+    def add_vwap(self, vwap_length: int, std_dev: float, array: np.ndarray) -> np.ndarray | dict:
+        try:
+            # Ensure all data is numeric instantly
+            data = pd.DataFrame(array, columns=["Open", "High", "Low", "Close", "Volume"]).astype(float)
+            
+            # 1. Calculate the Typical Price (TP)
+            data["TP"] = (data["High"] + data["Low"] + data["Close"]) / 3.0
+            
+            # 2. Multiply TP by Volume
+            data["TP_V"] = data["TP"] * data["Volume"]
+            
+            # 3. Multiply TP squared by Volume (Required for Volume-Weighted Variance)
+            data["TP2_V"] = (data["TP"] ** 2) * data["Volume"]
+            
+            # 4. Calculate the Rolling Sums
+            roll_vol = data["Volume"].rolling(window=vwap_length).sum()
+            roll_tp_v = data["TP_V"].rolling(window=vwap_length).sum()
+            roll_tp2_v = data["TP2_V"].rolling(window=vwap_length).sum()
+            
+            # 5. Calculate Moving VWAP
+            data["VWAP"] = roll_tp_v / roll_vol
+            
+            # 6. Calculate Volume-Weighted Standard Deviation
+            # Math formula: Variance = Mean(X^2) - Mean(X)^2
+            variance = (roll_tp2_v / roll_vol) - (data["VWAP"] ** 2)
+            
+            # .clip(lower=0) prevents floating-point inaccuracies from creating microscopic negative numbers
+            std = np.sqrt(variance.clip(lower=0))
+            
+            # 7. Calculate the Upper and Lower Bands
+            data["Upper_Band"] = data["VWAP"] + (std_dev * std)
+            data["Lower_Band"] = data["VWAP"] - (std_dev * std)
+            
+            # 8. Clean up intermediate math columns so they don't bloat the final array
+            data.drop(columns=["TP", "TP_V", "TP2_V"], inplace=True)
+            data.dropna(inplace=True)
+            
+            return data.to_numpy()
+            
+        except Exception as e:
+            print(f"Error in add_vwap: {e}")
+            return {"status": 0, "message": str(e)}
+
     def add_indicator(self, user_data: dict, data: np.array) -> np.array:
         if user_data["strategy_name"] == "double-ema":
             if user_data['ema_long'] <=0 or user_data["ema_short"] <=0 or user_data["ema_long"] == user_data["ema_short"]:
@@ -106,5 +149,10 @@ class Indicators:
                     else:
                         data = self.add_rsi(user_data["rsi_length"], data)
                         return data
-                    
+        elif user_data["strategy_name"] == "vwap":
+                            if user_data['vwap_length'] <=0:
+                                return {"message": "VWAP parameters must be positive integers.", "status" : 0}
+                            else:
+                                data = self.add_vwap(user_data["vwap_length"], user_data["std_dev"], data)
+                                return data            
         
