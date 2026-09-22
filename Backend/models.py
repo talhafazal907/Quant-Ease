@@ -26,6 +26,9 @@ class  Reset_data(BaseModel):
 class  check_user(BaseModel):
         email : Annotated[EmailStr, Field(..., description="Email for the checking user account")]
 
+class Strategy_Result_Request(BaseModel):
+    strategy_id: Annotated[int, Field(..., gt=0, description="Primary key of the saved strategy")]
+
 class ema_crossover(BaseModel):
     strategy_name : Annotated[str, Field(..., description="Name of the Strategy or can be indicator name as well like double-EMA, MACD, RSI")]
     ema_short : Annotated[int, Field(..., description="Short exponential moving average of the two emacross strategy")]
@@ -72,5 +75,4 @@ class RSI(BaseModel):
     time_frame: Annotated[str, Field(..., description="Timeframe for data of SYMBOL of the coin used in backtest like for 1-minute timeframe is will be 1m, for one-hour it will be 1h")]
     capital : Annotated[float, Field(..., description="Initial capital for the backtest")]
 
-class Strategy_Result_Request(BaseModel):
-    id : Annotated[int, Field(..., description="Strategy id for which user wants to fetch the results")]
+

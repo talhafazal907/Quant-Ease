@@ -715,6 +715,96 @@
       margin-top: 25px
     }
 
+    .result-detail-row:hover {
+      background: transparent !important
+    }
+
+    .result-detail-cell {
+      padding: 0 !important;
+      white-space: normal !important;
+      background: #fbfdf8
+    }
+
+    .inline-results {
+      display: grid;
+      gap: 18px;
+      padding: 22px 25px 25px;
+      border-top: 1px solid #dce8d0;
+      border-bottom: 1px solid #dce8d0
+    }
+
+    .inline-results-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px
+    }
+
+    .inline-results-head h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 15px
+    }
+
+    .inline-results-head span {
+      color: var(--success);
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    .inline-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px
+    }
+
+    .inline-metric {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px
+    }
+
+    .inline-metric span,
+    .inline-metric small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600
+    }
+
+    .inline-metric strong {
+      display: block;
+      color: var(--navy);
+      font: 700 19px Montserrat;
+      letter-spacing: -.7px;
+      margin: 4px 0
+    }
+
+    .inline-chart-wrap {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 15px
+    }
+
+    .inline-chart-wrap h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 14px
+    }
+
+    .inline-chart-wrap p {
+      margin: 3px 0 10px;
+      color: var(--muted);
+      font-size: 11px
+    }
+
+    .inline-equity-chart {
+      height: 255px;
+      width: 100%
+    }
+
     @media(max-width:1050px) {
       .workspace-grid {
         grid-template-columns: 330px 1fr
@@ -777,6 +867,10 @@
         grid-template-columns: 1fr
       }
 
+      .inline-metrics {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
       .empty-state {
         min-height: 340px
       }
@@ -813,6 +907,10 @@
 
       .config-panel {
         padding: 20px
+      }
+
+      .inline-results {
+        padding: 18px 16px
       }
     }
   </style>
@@ -989,7 +1087,8 @@
               <tbody id="strategiesTableBody"></tbody>
             </table>
           </div>
-          <div class="strategies-empty" id="strategiesEmpty" hidden>No backtested strategies yet. Run a backtest to see it here.</div>
+          <div class="strategies-empty" id="strategiesEmpty" hidden>No backtested strategies yet. Run a backtest to see
+            it here.</div>
         </section>
         <section class="saved-results" id="savedResults" aria-live="polite">
           <div class="metrics-grid">
@@ -1027,19 +1126,19 @@
           { name: 'signal_line', label: 'Signal line period', type: 'number', default: 9, min: 1, parse: Number.parseInt }
         ]
       },
-      bollinger_band:{
+      bollinger_band: {
         endpoint: '/backtest_bollinger', displayName: 'Bollinger Band', fields: [
           { name: 'ema_length', label: 'EMA Length', type: 'number', default: 20, min: 1, parse: Number.parseInt },
           { name: 'std_dev', label: 'Standard Deviation', type: 'number', default: 2, min: 1, parse: Number.parseInt }
         ]
       },
-      rsi:{
+      rsi: {
         endpoint: '/backtest_rsi', displayName: 'Relative Strength Index (RSI)', fields: [
           { name: 'rsi_length', label: 'RSI Length', type: 'number', default: 14, min: 1, parse: Number.parseInt },
           { name: 'rsi_overbought', label: 'Overbought Level', type: 'number', default: 70, min: 1, parse: Number.parseInt },
           { name: 'rsi_oversold', label: 'Oversold Level', type: 'number', default: 30, min: 1, parse: Number.parseInt }
         ]
-      }      
+      }
 
     };
 
@@ -1143,24 +1242,34 @@
       document.getElementById('breadcrumb').innerHTML = '<b>Workspace</b> &nbsp;/&nbsp; My strategies';
     }
 
-    function renderSavedResults(result, payload, config) {
+    function renderSavedResults(result, payload, config, strategyRow, strategyId) {
+      document.querySelectorAll('.result-detail-row').forEach((row) => row.remove());
       const initialCapital = Number(result.initial_capital != null ? result.initial_capital : payload.capital);
       const change = result.final_capital - initialCapital;
       const changePercent = initialCapital ? change / initialCapital * 100 : 0;
-      const finalCapital = document.getElementById('savedFinalCapital');
-      finalCapital.textContent = formatCurrency(result.final_capital);
-      finalCapital.className = change >= 0 ? 'positive' : 'negative';
-      document.getElementById('savedNetChange').textContent = `${change >= 0 ? '+' : ''}${formatCurrency(change)} (${changePercent >= 0 ? '+' : ''}${formatPercent(changePercent)})`;
-      document.getElementById('savedTotalTrades').textContent = Number(result.trades || 0).toLocaleString();
-      document.getElementById('savedWinRate').textContent = formatPercent(result.win_rate || 0);
-      document.getElementById('savedMaxDrawdown').textContent = `-${formatPercent(Math.abs(result.max_drawdown || 0))}`;
-      document.getElementById('savedWinLoss').textContent = result.wins !== undefined ? `${result.wins} wins · ${result.losses} losses` : 'Closed trades';
       const curve = Array.isArray(result.equity_curve) ? result.equity_curve : [];
       const color = change >= 0 ? '#64a31e' : '#bd3c3c';
-      savedResults.style.display = 'grid';
-      savedResults.style.gap = '25px';
-      Plotly.newPlot('savedEquityChart', [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 } }, yaxis: { title: 'Equity (USD)', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
-      savedResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const detailRow = document.createElement('tr');
+      detailRow.className = 'result-detail-row';
+      const detailCell = document.createElement('td');
+      detailCell.className = 'result-detail-cell';
+      detailCell.colSpan = document.querySelectorAll('#strategiesTable thead th').length;
+      const chartId = `strategyResultChart${strategyId}`;
+      detailCell.innerHTML = `
+        <div class="inline-results">
+          <div class="inline-results-head"><h3>${escapeHtml(config.displayName || 'Strategy')} results</h3><span>✓ Saved backtest</span></div>
+          <div class="inline-metrics">
+            <article class="inline-metric"><span>Final capital</span><strong class="${change >= 0 ? 'positive' : 'negative'}">${escapeHtml(formatCurrency(result.final_capital))}</strong><small>${escapeHtml(`${change >= 0 ? '+' : ''}${formatCurrency(change)} (${changePercent >= 0 ? '+' : ''}${formatPercent(changePercent)})`)}</small></article>
+            <article class="inline-metric"><span>Total trades</span><strong>${escapeHtml(Number(result.trades || 0).toLocaleString())}</strong><small>Completed positions</small></article>
+            <article class="inline-metric"><span>Win rate</span><strong>${escapeHtml(formatPercent(result.win_rate || 0))}</strong><small>${escapeHtml(result.wins !== undefined ? `${result.wins} wins · ${result.losses} losses` : 'Closed trades')}</small></article>
+            <article class="inline-metric"><span>Max drawdown</span><strong class="negative">-${escapeHtml(formatPercent(Math.abs(result.max_drawdown || 0)))}</strong><small>From equity peak</small></article>
+          </div>
+          <div class="inline-chart-wrap"><h3>Equity curve</h3><p>Account value across this historical run.</p><div class="inline-equity-chart" id="${chartId}"></div></div>
+        </div>`;
+      detailRow.appendChild(detailCell);
+      strategyRow.insertAdjacentElement('afterend', detailRow);
+      Plotly.newPlot(chartId, [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 } }, yaxis: { title: 'Equity (USD)', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
+      detailRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function renderStrategiesTable(strategies) {
@@ -1230,7 +1339,7 @@
       button.textContent = 'Loading…';
       strategiesError.style.display = 'none';
       try {
-        const response = await fetch(`${API_BASE}/strategy_results`, {
+        const response = await fetch(`${API_BASE}/results`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ strategy_id: strategyId })
@@ -1240,7 +1349,7 @@
         if (!response.ok) throw new Error(data.detail || data.message || 'Unable to load strategy results.');
         const payload = strategy?.config_params || {};
         const config = STRATEGY_CONFIGS[strategy?.strategy_name] || { displayName: strategy?.strategy_name || 'Strategy' };
-        renderSavedResults(data.results || data, payload, config);
+        renderSavedResults(data.results || data, payload, config, button.closest('tr'), strategyId);
       } catch (error) {
         showStrategiesError(error.message || 'Unable to reach the backend. Please try again.');
       } finally {

@@ -10,6 +10,7 @@ from auth import bearer_scheme, create_access_token, decode_access_token
 import json
 import os
 import numpy as np
+from pathlib import Path
 
 dbh = DataBase_helper()
 
@@ -304,19 +305,36 @@ def _json_number(value):
     return float(value)
 
 
-@app.post("/strategy_results")
-def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(get_current_user_id)):
+def _load_equity_curve(equity_path: str | bytes | bytearray) -> list:
+    """Load a saved curve only from the local equity-curve directory."""
+    # FIX: Include bytearray in the instance check
+    if isinstance(equity_path, (bytes, bytearray)):
+        equity_path = equity_path.decode("utf-8")
+        
+    if not equity_path:
+        raise FileNotFoundError("No equity curve was recorded for this result.")
+
+    curves_directory = (Path(__file__).resolve().parent / "equity_curves").resolve()
+    curve_file = Path(equity_path).resolve()
+    
     try:
-        row = dbh.get_results_by_strategy_id(data.strategy_id)
+        curve_file.relative_to(curves_directory)
+    except ValueError as exc:
+        raise ValueError("Invalid equity curve location.") from exc
+
+    if not curve_file.is_file():
+        raise FileNotFoundError("The saved equity curve could not be found.")
+
+    return np.load(curve_file, allow_pickle=False).tolist()
+
+
+@app.post("/results")
+def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(get_current_user_id)):
+    """Return one saved result only when its strategy belongs to the JWT user."""
+    try:
+        row = dbh.get_user_results_by_strategy_id(data.strategy_id, user_id)
         if not row:
             return JSONResponse(status_code=404, content={"message": "Results not found for this strategy"})
-
-        equity_path = row.get("equity_data")
-        if isinstance(equity_path, bytes):
-            equity_path = equity_path.decode("utf-8")
-        equity_curve = []
-        if equity_path and os.path.isfile(equity_path):
-            equity_curve = np.load(equity_path).tolist()
 
         results = {
             "r_id": row.get("r_id"),
@@ -328,8 +346,12 @@ def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(g
             "losses": int(row.get("Losses") or 0),
             "max_drawdown": _json_number(row.get("max_drawdown")),
             "win_rate": _json_number(row.get("winrate")),
-            "equity_curve": equity_curve,
+            "equity_curve": _load_equity_curve(row.get("equity_data")),
         }
         return JSONResponse(status_code=200, content={"message": "Results fetched successfully", "results": results})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"message": "Issue in Backend", "error": str(e)})
+    except (FileNotFoundError, ValueError):
+        return JSONResponse(status_code=500, content={"message": "Saved equity curve is unavailable for this result"})
+    except Exception as exc:
+        return JSONResponse(status_code=500, content={"message": "Issue in Backend", "error": str(exc)})
+
+

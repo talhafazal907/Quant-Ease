@@ -47,16 +47,23 @@ class DataBase_helper:
         try:
             query = "SELECT * FROM strategies WHERE s_id = %s"
             self.cursor.execute(query, (user_id,))
-            strategies = self.cursor.fetchall()
-            return strategies
+            return self.cursor.fetchall() or []
         except mysql.connector.Error:
             return None
 
-    def get_results_by_strategy_id(self, strategy_id: int):
+    def get_user_results_by_strategy_id(self, strategy_id: int, user_id: int):
+        """Fetch one result only when its strategy belongs to the authenticated user."""
         try:
-            query = "SELECT * FROM results WHERE s_id = %s"
-            self.cursor.execute(query, (strategy_id,))
-            return self.cursor.fetchone()
+            query = """
+                SELECT results.*
+                FROM results
+                INNER JOIN strategies ON results.s_id = strategies.id
+                WHERE results.s_id = %s AND strategies.s_id = %s
+                ORDER BY results.r_id DESC
+                LIMIT 1
+            """
+            self.cursor.execute(query, (strategy_id, user_id))
+            return self.cursor.fetchone()          
         except mysql.connector.Error:
             return None
 
