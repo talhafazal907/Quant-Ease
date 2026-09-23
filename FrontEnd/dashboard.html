@@ -965,6 +965,7 @@
                   <option value="rsi">Relative Strength Index (RSI)</option>
                   <option value="rsi">Relative Strength Index (RSI)</option>
                   <option value="vwap">Volume Weighted Average Price (VWAP)</option>
+                  <option value="stoch_rsi">Stochastic RSI</option>
                 </select></div>
               <div class="form-section">
                 <p class="section-title">INDICATOR PARAMETERS</p>
@@ -1146,8 +1147,17 @@
           { name: 'vwap_length', label: 'VWAP Length', type: 'number', default: 20, min: 1, parse: Number.parseInt },
           { name: 'std_dev', label: 'Standard Deviation', type: 'number', default: 2, min: 1, parse: Number.parseInt }
         ]
+      },
+      stoch_rsi: {
+        endpoint: '/backtest_stoch_rsi', displayName: 'Stochastic RSI', fields: [
+          { name: 'rsi_length', label: 'RSI Length', type: 'number', default: 14, min: 1, parse: Number.parseInt },
+          { name: 'stoch_length', label: 'Stochastic Length', type: 'number', default: 14, min: 1, parse: Number.parseInt },
+          { name: 'k_smooth', label: 'K Smoothing', type: 'number', default: 3, min: 1, parse: Number.parseInt },
+          { name: 'd_smooth', label: 'D Smoothing', type: 'number', default: 3, min: 1, parse: Number.parseInt },
+          { name: 'oversold', label: 'Oversold Level', type: 'number', default: 20, min: 1, parse: Number.parseInt },
+          { name: 'overbought', label: 'Overbought Level', type: 'number', default: 80, min: 1, parse: Number.parseInt }
+        ]
       }
-
     };
 
     const strategySelect = document.getElementById('strategy');

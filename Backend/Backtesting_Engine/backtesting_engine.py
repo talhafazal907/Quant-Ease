@@ -1016,7 +1016,207 @@ class Backtesting_Engine:
                 "losses": losses,
                 "status": 1
             }                    
+#    def run_stoch_rsi(self, user_data: dict, data_array: np.ndarray) -> dict:
+    def run_stoch_rsi(self, user_data: dict, data_array: np.ndarray) -> dict:
+        """ This function is responsible to run the backtest of the Stochastic RSI Strategy """
+        if user_data["market_type"] == "spot":
+            @njit
+            def loop(data_array: np.ndarray, capital: float, risk: float, reward: float, oversold: float):
+                # Initialize trackers
+                trades = 0
+                wins = 0
+                losses = 0
+                maxdrawdown = 0.0
+                
+                peak_equity = capital
+                
+                equity = np.zeros(len(data_array))
+                equity[0] = capital
+                
+                position_type = 0 # 0 = Flat, 1 = Buy (Long)
+                
+                # Indices: Open(0), High(1), Low(2), Close(3), Vol(4), %K(5), %D(6)
+                open_i = 0; high_i = 1; low_i = 2; close_i = 3; k_i = 5; d_i = 6
+                
+                position_size = 0.0
+                entry_price = 0.0
+                
+                for i in range(1, len(data_array)-1):
+                    # We need current and previous values to detect a crossover
+                    curr_k = data_array[i, k_i]
+                    curr_d = data_array[i, d_i]
+                    prev_k = data_array[i-1, k_i]
+                    prev_d = data_array[i-1, d_i]
+                    
+                    execution_price = data_array[i+1, open_i]
+                    current_high = data_array[i, high_i]
+                    current_low = data_array[i, low_i]
+                    
+                    # Spot Market Signal: %K crosses ABOVE %D while %K is in the oversold zone
+                    long_signal = (curr_k > curr_d) and (prev_k <= prev_d) and (curr_k < oversold)
+                    
+                    # --- 1. STRICT STOPLOSS & TAKE PROFIT ---
+                    if position_type == 1:
+                        if current_low <= entry_price * (1 - risk):
+                            capital = position_size * (entry_price * (1 - risk))
+                            position_type = 0
+                            position_size = 0.0
+                            entry_price = 0.0
+                            losses += 1
+                        elif current_high >= entry_price * (1 + reward):
+                            capital = position_size * (entry_price * (1 + reward))
+                            position_type = 0
+                            position_size = 0.0
+                            entry_price = 0.0
+                            wins += 1
                             
+                    # --- 2. ENTRIES (ONLY IF FLAT) ---
+                    if position_type == 0:
+                        if long_signal:
+                            position_type = 1
+                            entry_price = execution_price
+                            position_size = capital / execution_price
+                            
+                    # --- 3. UPDATE CURRENT EQUITY ---
+                    if position_type == 1:
+                        equity[i+1] = position_size * data_array[i+1, close_i]
+                    else:
+                        equity[i+1] = capital
+                        
+                    # --- 4. MAX DRAWDOWN LOGIC ---
+                    if equity[i+1] > peak_equity:
+                        peak_equity = equity[i+1]
+                    current_drawdown = (peak_equity - equity[i+1]) / peak_equity
+                    if current_drawdown > maxdrawdown:
+                        maxdrawdown = current_drawdown
+                        
+                return equity[-1], wins, losses, maxdrawdown, equity
+                
+            data_array = data_array.astype(np.float64)
+            final_cap, wins, losses, max_dd, eq_curve = loop(
+                data_array, 
+                user_data["capital"], 
+                user_data["risk"], 
+                user_data["reward"],
+                user_data["oversold"]
+            )
+            trades = wins + losses
+            winrate = wins / trades if trades > 0 else 0.0
+            return {
+                "final_capital": final_cap,
+                "trades": trades,
+                "win_rate": winrate * 100,
+                "max_drawdown": max_dd * 100,
+                "equity_curve": eq_curve,
+                "wins": wins,
+                "losses": losses,
+                "status": 1
+            }                
+            
+        if user_data["market_type"] == "futures":
+            @njit
+            def loop(data_array: np.ndarray, capital: float, risk: float, reward: float, oversold: float, overbought: float):
+                trades = 0
+                wins = 0
+                losses = 0
+                maxdrawdown = 0.0
+                peak_equity = capital
+                
+                equity = np.zeros(len(data_array))
+                equity[0] = capital
+                
+                position_type = 0 # 0 = Flat, 1 = Long, -1 = Short
+                
+                open_i = 0; high_i = 1; low_i = 2; close_i = 3; k_i = 5; d_i = 6
+                
+                position_size = 0.0
+                entry_price = 0.0
+                
+                # Start at index 1 so we can check i-1 for crossovers
+                for i in range(1, len(data_array)-1):
+                    curr_k = data_array[i, k_i]
+                    curr_d = data_array[i, d_i]
+                    prev_k = data_array[i-1, k_i]
+                    prev_d = data_array[i-1, d_i]
+
+                    execution_price = data_array[i+1, open_i]
+                    current_high = data_array[i, high_i]
+                    current_low = data_array[i, low_i]
+                    
+                    # Futures Market Crossover Signals
+                    long_signal = (curr_k > curr_d) and (prev_k <= prev_d) and (curr_k < oversold)
+                    short_signal = (curr_k < curr_d) and (prev_k >= prev_d) and (curr_k > overbought)
+                    
+                    # --- 1. STRICT STOPLOSS & TAKE PROFIT ---
+                    if position_type == 1:
+                        if current_low <= entry_price * (1 - risk):
+                            capital = capital + position_size * ((entry_price * (1 - risk)) - entry_price)
+                            position_type = 0
+                            losses += 1
+                        elif current_high >= entry_price * (1 + reward):
+                            capital = capital + position_size * ((entry_price * (1 + reward)) - entry_price)
+                            position_type = 0
+                            wins += 1
+
+                    elif position_type == -1:
+                        if current_high >= entry_price * (1 + risk): 
+                            capital = capital + position_size * (entry_price - (entry_price * (1 + risk)))
+                            position_type = 0
+                            losses += 1
+                        elif current_low <= entry_price * (1 - reward): 
+                            capital = capital + position_size * (entry_price - (entry_price * (1 - reward)))
+                            position_type = 0
+                            wins += 1
+
+                    # --- 2. ENTRIES (ONLY IF FLAT) ---
+                    if position_type == 0:
+                        if long_signal:
+                            position_type = 1
+                            entry_price = execution_price
+                            position_size = capital / execution_price
+                        elif short_signal:
+                            position_type = -1
+                            entry_price = execution_price
+                            position_size = capital / execution_price
+                            
+                    # --- 3. UPDATE CURRENT EQUITY ---
+                    if position_type == 1:
+                        equity[i+1] = capital + position_size * (data_array[i+1, close_i] - entry_price)
+                    elif position_type == -1:
+                        equity[i+1] = capital + position_size * (entry_price - data_array[i+1, close_i])
+                    else:
+                        equity[i+1] = capital
+                        
+                    # --- 4. MAX DRAWDOWN LOGIC ---
+                    if equity[i+1] > peak_equity:
+                        peak_equity = equity[i+1]
+                    current_drawdown = (peak_equity - equity[i+1]) / peak_equity
+                    if current_drawdown > maxdrawdown:
+                        maxdrawdown = current_drawdown
+                        
+                return equity[-1], wins, losses, maxdrawdown, equity
+
+            data_array = data_array.astype(np.float64)
+            final_cap, wins, losses, max_dd, eq_curve = loop(
+                data_array, 
+                user_data["capital"], 
+                user_data["risk"], 
+                user_data["reward"],
+                user_data["oversold"],
+                user_data["overbought"]
+            )
+            trades = wins + losses
+            winrate = wins / trades if trades > 0 else 0.0
+            return {
+                "final_capital": final_cap,
+                "trades": trades,
+                "win_rate": winrate * 100,
+                "max_drawdown": max_dd * 100,
+                "equity_curve": eq_curve,
+                "wins": wins,
+                "losses": losses,
+                "status": 1
+            }
 
 
     def run(self) -> dict:
@@ -1066,7 +1266,16 @@ class Backtesting_Engine:
                     return data_
                 results = self.run_vwap(user_data=self.user_data, data_array= data_)
                 return results
-                        
+            elif self.user_data["strategy_name"] == "stoch_rsi":
+                data = dl.Load_data(self.user_data["symbol"], self.user_data["time_frame"])
+                if len(data) == 0:
+                    return {"status": "No data available", "status": 0}
+                data_ = i.add_indicator(self.user_data, data)
+                if isinstance(data_, dict):
+                    return data_
+                results = self.run_stoch_rsi(user_data=self.user_data, data_array= data_)
+                return results
+            
         except Exception as e:
             return {"error" : f"Issue {str(e)}", "status" : 0}
 

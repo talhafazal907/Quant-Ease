@@ -122,6 +122,51 @@ class Indicators:
             print(f"Error in add_vwap: {e}")
             return {"status": 0, "message": str(e)}
 
+    def add_stoch_rsi(self, rsi_length: int, stoch_length: int, k_smooth: int, d_smooth: int, array: np.ndarray) -> np.ndarray | dict:
+        try:
+            # Ensure all data is numeric instantly
+            data = pd.DataFrame(array, columns=["Open", "High", "Low", "Close", "Volume"]).astype(float)
+            
+            # --- 1. Calculate Standard RSI ---
+            delta = data["Close"].diff()
+            gain = delta.clip(lower=0)
+            loss = -1 * delta.clip(upper=0)
+            
+            avg_gain = gain.ewm(alpha=1/rsi_length, min_periods=rsi_length, adjust=False).mean()
+            avg_loss = loss.ewm(alpha=1/rsi_length, min_periods=rsi_length, adjust=False).mean()
+            
+            rs = avg_gain / avg_loss
+            rsi = np.where(avg_loss == 0, 100, 100 - (100 / (1 + rs)))
+            data["RSI"] = rsi
+            
+            # --- 2. Calculate Stochastic RSI ---
+            # Find the Min and Max RSI over the stochastic window
+            min_rsi = data["RSI"].rolling(window=stoch_length).min()
+            max_rsi = data["RSI"].rolling(window=stoch_length).max()
+            
+            # Calculate raw StochRSI (scaled 0 to 100)
+            # np.where safely handles edge cases where max_rsi == min_rsi (division by zero)
+            raw_stoch_rsi = np.where(
+                max_rsi == min_rsi, 
+                0, 
+                ((data["RSI"] - min_rsi) / (max_rsi - min_rsi)) * 100
+            )
+            data["Raw_Stoch"] = raw_stoch_rsi
+            
+            # --- 3. Calculate %K and %D lines ---
+            data["%K"] = data["Raw_Stoch"].rolling(window=k_smooth).mean()
+            data["%D"] = data["%K"].rolling(window=d_smooth).mean()
+            
+            # Drop intermediate columns to keep array clean for Numba
+            data.drop(columns=["RSI", "Raw_Stoch"], inplace=True)
+            data.dropna(inplace=True)
+            
+            return data.to_numpy()
+            
+        except Exception as e:
+            print(f"Error in add_stoch_rsi: {e}")
+            return {"status": 0, "message": str(e)}
+
     def add_indicator(self, user_data: dict, data: np.array) -> np.array:
         if user_data["strategy_name"] == "double-ema":
             if user_data['ema_long'] <=0 or user_data["ema_short"] <=0 or user_data["ema_long"] == user_data["ema_short"]:
@@ -154,5 +199,11 @@ class Indicators:
                                 return {"message": "VWAP parameters must be positive integers.", "status" : 0}
                             else:
                                 data = self.add_vwap(user_data["vwap_length"], user_data["std_dev"], data)
+                                return data            
+        elif user_data["strategy_name"] == "stoch_rsi":
+                            if user_data['rsi_length'] <=0 and user_data["stoch_length"] <=0:
+                                return {"message": "StochRSI parameters must be positive integers.", "status" : 0}
+                            else:
+                                data = self.add_stoch_rsi(user_data["rsi_length"], user_data["stoch_length"], user_data["k_smooth"], user_data["d_smooth"], data)
                                 return data            
         

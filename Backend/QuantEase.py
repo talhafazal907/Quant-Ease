@@ -297,6 +297,48 @@ def backtest_vwap(data: VWAP, user_id: int = Depends(get_current_user_id)):
                     "details": results
                 }
             )
+    except Exception as e:
+        # 500 is perfect here, as it catches real crashes
+        return JSONResponse(
+            status_code=500, 
+            content={
+                "message": "Internal Backend Issue", 
+                "error": str(e)
+            }
+        )
+
+    
+@app.post("/backtest_stoch_rsi")
+def backtest_stoch_rsi(data: StochRSI, user_id: int = Depends(get_current_user_id)):
+    try:
+        # data.model_dump() passes the validated dictionary to your engine
+        strategy_data = data.model_dump()
+        backtester = Backtesting_Engine(strategy_data)
+        results = backtester.run()
+        
+        if results["status"] == 1:
+            # Convert the array to a list right before sending the response
+            results["equity_curve"] = results["equity_curve"].tolist()
+            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+                return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
+            
+            return JSONResponse(
+                status_code=200, 
+                content={
+                    "message": "Backtest completed successfully", 
+                    "results": results
+                }
+            )
+            
+        elif results["status"] == 0:
+            # 400 is better here because the engine ran, but the input data/logic failed gracefully
+            return JSONResponse(
+                status_code=400, 
+                content={
+                    "message": "Backtest failed to execute completely", 
+                    "details": results
+                }
+            )
             
     except Exception as e:
         # 500 is perfect here, as it catches real crashes
