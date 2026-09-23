@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+
 class Indicators:
     def __init__(self):
         pass
@@ -167,6 +168,81 @@ class Indicators:
             print(f"Error in add_stoch_rsi: {e}")
             return {"status": 0, "message": str(e)}
 
+    def add_supertrend(self, atr_length: int, multiplier: float, array: np.ndarray) -> np.ndarray | dict:
+        try:
+            data = pd.DataFrame(array, columns=["Open", "High", "Low", "Close", "Volume"]).astype(float)
+            
+            # --- 1. Calculate Average True Range (ATR) ---
+            prev_close = data["Close"].shift(1)
+            tr1 = data["High"] - data["Low"]
+            tr2 = (data["High"] - prev_close).abs()
+            tr3 = (data["Low"] - prev_close).abs()
+            
+            # TR is the maximum of the three values
+            tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            
+            # TradingView uses Wilder's RMA for ATR by default
+            atr = tr.ewm(alpha=1/atr_length, min_periods=atr_length, adjust=False).mean()
+            
+            # --- 2. Calculate Basic Bands ---
+            hl2 = (data["High"] + data["Low"]) / 2.0
+            bub = hl2 + (multiplier * atr)  # Basic Upper Band
+            blb = hl2 - (multiplier * atr)  # Basic Lower Band
+            
+            # --- 3. Recursive Final Bands & Supertrend Math ---
+            close_arr = data["Close"].to_numpy()
+            bub_arr = bub.to_numpy()
+            blb_arr = blb.to_numpy()
+            
+            fub = np.zeros(len(data))
+            flb = np.zeros(len(data))
+            st_arr = np.zeros(len(data))
+            dir_arr = np.zeros(len(data))
+            
+            for i in range(atr_length, len(data)):
+                # Calculate Final Upper Band (FUB)
+                if bub_arr[i] < fub[i-1] or close_arr[i-1] > fub[i-1]:
+                    fub[i] = bub_arr[i]
+                else:
+                    fub[i] = fub[i-1]
+                    
+                # Calculate Final Lower Band (FLB)
+                if blb_arr[i] > flb[i-1] or close_arr[i-1] < flb[i-1]:
+                    flb[i] = blb_arr[i]
+                else:
+                    flb[i] = flb[i-1]
+                    
+                # Calculate Supertrend Line and Direction
+                if i == atr_length:
+                    st_arr[i] = fub[i]
+                    dir_arr[i] = -1
+                else:
+                    if dir_arr[i-1] == -1 and close_arr[i] <= fub[i]:
+                        st_arr[i] = fub[i]
+                        dir_arr[i] = -1
+                    elif dir_arr[i-1] == -1 and close_arr[i] > fub[i]:
+                        st_arr[i] = flb[i]
+                        dir_arr[i] = 1 # Flip to Bullish
+                    elif dir_arr[i-1] == 1 and close_arr[i] >= flb[i]:
+                        st_arr[i] = flb[i]
+                        dir_arr[i] = 1
+                    elif dir_arr[i-1] == 1 and close_arr[i] < flb[i]:
+                        st_arr[i] = fub[i]
+                        dir_arr[i] = -1 # Flip to Bearish
+                        
+            data["Supertrend"] = st_arr
+            data["Trend_Dir"] = dir_arr
+            
+            # Crop out the first `atr_length` rows since they are just NaNs/Zeros
+            data = data.iloc[atr_length:].copy()
+            data.dropna(inplace=True)
+            
+            return data.to_numpy()
+            
+        except Exception as e:
+            print(f"Error in add_supertrend: {e}")
+            return {"status": 0, "message": str(e)}
+
     def add_indicator(self, user_data: dict, data: np.array) -> np.array:
         if user_data["strategy_name"] == "double-ema":
             if user_data['ema_long'] <=0 or user_data["ema_short"] <=0 or user_data["ema_long"] == user_data["ema_short"]:
@@ -205,5 +281,11 @@ class Indicators:
                                 return {"message": "StochRSI parameters must be positive integers.", "status" : 0}
                             else:
                                 data = self.add_stoch_rsi(user_data["rsi_length"], user_data["stoch_length"], user_data["k_smooth"], user_data["d_smooth"], data)
+                                return data            
+        elif user_data["strategy_name"] == "super_trend":
+                            if user_data['atr_length'] <=0 and user_data["multiplier"] <=0:
+                                return {"message": "SuperTrend parameters must be positive integers.", "status" : 0}
+                            else:
+                                data = self.add_supertrend(user_data["atr_length"], user_data["multiplier"], data)
                                 return data            
         

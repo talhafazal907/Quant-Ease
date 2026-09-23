@@ -963,9 +963,9 @@
                   <option value="macd">MACD crossover</option>
                   <option value="bollinger_band">Bollinger Band</option>
                   <option value="rsi">Relative Strength Index (RSI)</option>
-                  <option value="rsi">Relative Strength Index (RSI)</option>
                   <option value="vwap">Volume Weighted Average Price (VWAP)</option>
                   <option value="stoch_rsi">Stochastic RSI</option>
+                  <option value="super_trend">Super Trend</option>
                 </select></div>
               <div class="form-section">
                 <p class="section-title">INDICATOR PARAMETERS</p>
@@ -1156,6 +1156,12 @@
           { name: 'd_smooth', label: 'D Smoothing', type: 'number', default: 3, min: 1, parse: Number.parseInt },
           { name: 'oversold', label: 'Oversold Level', type: 'number', default: 20, min: 1, parse: Number.parseInt },
           { name: 'overbought', label: 'Overbought Level', type: 'number', default: 80, min: 1, parse: Number.parseInt }
+        ]
+      },
+      super_trend: {
+        endpoint: '/backtest_supertrend', displayName: 'Super Trend', fields: [
+          { name: 'atr_length', label: 'ATR Length', type: 'number', default: 14, min: 1, parse: Number.parseInt },
+          { name: 'multiplier', label: 'Multiplier', type: 'number', default: 2.0, min: 1, parse: Number.parseFloat }
         ]
       }
     };
