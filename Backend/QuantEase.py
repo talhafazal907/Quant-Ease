@@ -457,11 +457,11 @@ def _load_equity_curve(equity_path: str | bytes | bytearray) -> list:
 def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(get_current_user_id)):
     """Return one saved result only when its strategy belongs to the JWT user."""
     try:
-        row = dbh.get_user_results_by_strategy_id(data.strategy_id, user_id)
-        if not row:
+        row , configs= dbh.get_user_results_by_strategy_id(data.strategy_id, user_id)
+        if not row and not configs:
             return JSONResponse(status_code=404, content={"message": "Results not found for this strategy"})
 
-        results = {
+        response = {
             "r_id": row.get("r_id"),
             "s_id": row.get("s_id"),
             "initial_capital": _json_number(row.get("initial_capital")),
@@ -473,7 +473,7 @@ def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(g
             "win_rate": _json_number(row.get("winrate")),
             "equity_curve": _load_equity_curve(row.get("equity_data")),
         }
-        return JSONResponse(status_code=200, content={"message": "Results fetched successfully", "results": results})
+        return JSONResponse(status_code=200, content={"message": "Results fetched successfully", "results": response, "config_params": json.loads(configs)})
     except (FileNotFoundError, ValueError):
         return JSONResponse(status_code=500, content={"message": "Saved equity curve is unavailable for this result"})
     except Exception as exc:

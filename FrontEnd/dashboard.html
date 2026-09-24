@@ -758,6 +758,36 @@
       gap: 12px
     }
 
+    .inline-parameters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid #dce8d0;
+      margin-top: 4px;
+    }
+
+    .param-badge {
+      background: #f1f5eb;
+      border: 1px solid #dce8d0;
+      color: var(--navy);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    
+    .param-badge span {
+      color: #728096;
+      font-weight: 500;
+    }
+    
+    .param-badge strong {
+      font-weight: 600;
+    }
+
     .inline-metric {
       background: #fff;
       border: 1px solid var(--line);
@@ -1279,6 +1309,17 @@
       detailCell.className = 'result-detail-cell';
       detailCell.colSpan = document.querySelectorAll('#strategiesTable thead th').length;
       const chartId = `strategyResultChart${strategyId}`;
+
+      const paramsHtml = Object.entries(payload)
+        .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+        .map(([key, value]) => {
+          const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          return `<div class="param-badge"><span>${escapeHtml(formattedKey)}:</span> <strong>${escapeHtml(String(value))}</strong></div>`;
+        })
+        .join('');
+        
+      const parametersSection = paramsHtml ? `<div class="inline-parameters">${paramsHtml}</div>` : '';
+
       detailCell.innerHTML = `
         <div class="inline-results">
           <div class="inline-results-head"><h3>${escapeHtml(config.displayName || 'Strategy')} results</h3><span>✓ Saved backtest</span></div>
@@ -1288,6 +1329,7 @@
             <article class="inline-metric"><span>Win rate</span><strong>${escapeHtml(formatPercent(result.win_rate || 0))}</strong><small>${escapeHtml(result.wins !== undefined ? `${result.wins} wins · ${result.losses} losses` : 'Closed trades')}</small></article>
             <article class="inline-metric"><span>Max drawdown</span><strong class="negative">-${escapeHtml(formatPercent(Math.abs(result.max_drawdown || 0)))}</strong><small>From equity peak</small></article>
           </div>
+          ${parametersSection}
           <div class="inline-chart-wrap"><h3>Equity curve</h3><p>Account value across this historical run.</p><div class="inline-equity-chart" id="${chartId}"></div></div>
         </div>`;
       detailRow.appendChild(detailCell);
@@ -1371,7 +1413,7 @@
         const data = await response.json();
         if (response.status === 401) { localStorage.removeItem('access_token'); window.location.href = 'Auth/login.html'; return; }
         if (!response.ok) throw new Error(data.detail || data.message || 'Unable to load strategy results.');
-        const payload = strategy?.config_params || {};
+        const payload = data.config_params || strategy?.config_params || {};
         const config = STRATEGY_CONFIGS[strategy?.strategy_name] || { displayName: strategy?.strategy_name || 'Strategy' };
         renderSavedResults(data.results || data, payload, config, button.closest('tr'), strategyId);
       } catch (error) {

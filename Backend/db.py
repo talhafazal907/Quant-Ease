@@ -63,7 +63,11 @@ class DataBase_helper:
                 LIMIT 1
             """
             self.cursor.execute(query, (strategy_id, user_id))
-            return self.cursor.fetchone()          
+            results = self.cursor.fetchone()
+            query = """SELECT * FROM strategies WHERE id = %s AND s_id = %s"""
+            self.cursor.execute(query, (strategy_id, user_id))
+            strategy = self.cursor.fetchone()
+            return results, strategy['config_params'] if results and strategy else (None, None)
         except mysql.connector.Error:
             return None
 
