@@ -31,7 +31,7 @@ def register(user : Register_User):
             return JSONResponse(status_code=200, content= {"massage" : "Account Registered"})
         else:    
             return JSONResponse(status_code=500, content= {"massage" : "Issue in DB"})
-    
+
 
 @app.post("/verify")
 def verify(data: Verify_User):
@@ -476,7 +476,19 @@ def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(g
         return JSONResponse(status_code=200, content={"message": "Results fetched successfully", "results": response, "config_params": json.loads(configs)})
     except (FileNotFoundError, ValueError):
         return JSONResponse(status_code=500, content={"message": "Saved equity curve is unavailable for this result"})
-    except Exception as exc:
-        return JSONResponse(status_code=500, content={"message": "Issue in Backend", "error": str(exc)})
 
-
+@app.delete("/delete_strategy")
+def delete_strategy(data: Delete_Strategy, user_id: int = Depends(get_current_user_id)):
+    try:
+        if not dbh.fetch_user_by_id(user_id):
+            return JSONResponse(status_code=404, content={"message": "User not found"})
+        
+        # Fetch the strategy to ensure it belongs to the user
+        response = dbh.delete_strategy(data.strategy_id, user_id)
+        if not response:
+            return JSONResponse(status_code=404, content={"message": "Strategy not found or does not belong to the user"})
+        
+        # Delete the strategy and its associated result        
+        return JSONResponse(status_code=200, content={"message": "Strategy and associated results deleted successfully"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"message": "Issue in Backend", "error": str(e)})

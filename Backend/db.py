@@ -71,6 +71,28 @@ class DataBase_helper:
         except mysql.connector.Error:
             return None
 
+    def delete_strategy(self, strategy_id: int, user_id: int):
+        try:
+            # 1. Verify that the strategy belongs to the user
+            query = "SELECT * FROM strategies WHERE id = %s AND s_id = %s"
+            self.cursor.execute(query, (strategy_id, user_id))
+            strategy = self.cursor.fetchone()
+            if not strategy:
+                return None  # Strategy does not belong to the user
+
+            # 2. Delete associated results first
+            delete_results_query = "DELETE FROM results WHERE s_id = %s"
+            self.cursor.execute(delete_results_query, (strategy_id,))
+
+            # 3. Delete the strategy itself
+            delete_strategy_query = "DELETE FROM strategies WHERE id = %s"
+            self.cursor.execute(delete_strategy_query, (strategy_id,))
+
+            self.conn.commit()
+            return 1
+        except mysql.connector.Error:
+            return None
+
     def register(self, fname, lname, email, password):
         
         try:

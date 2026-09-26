@@ -694,6 +694,26 @@
       cursor: wait
     }
 
+    .delete-strategy-btn {
+      border: 0;
+      border-radius: 6px;
+      background: #fdf3f3;
+      color: #bd3c3c;
+      cursor: pointer;
+      font: 600 11px Montserrat;
+      padding: 8px 12px;
+      letter-spacing: .2px;
+    }
+
+    .delete-strategy-btn:hover:not(:disabled) {
+      background: #fbe6e6;
+    }
+
+    .delete-strategy-btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
     .strategies-empty,
     .strategies-error {
       padding: 42px 25px;
@@ -1360,7 +1380,12 @@
           <td class="muted-cell">${escapeHtml(params.market_type || '—')}</td>
           <td>${params.capital != null ? escapeHtml(formatCurrency(params.capital)) : '—'}</td>
           <td class="muted-cell">${escapeHtml(created)}</td>
-          <td><button class="show-results-btn" type="button" data-strategy-id="${escapeHtml(strategy.id)}">Show results</button></td>
+          <td>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="show-results-btn" type="button" data-strategy-id="${escapeHtml(strategy.id)}">Show results</button>
+              <button class="delete-strategy-btn" type="button" data-strategy-id="${escapeHtml(strategy.id)}" title="Delete Strategy">Delete</button>
+            </div>
+          </td>
         `;
         strategiesTableBody.appendChild(row);
       });
@@ -1397,6 +1422,43 @@
     });
 
     strategiesTableBody.addEventListener('click', async (event) => {
+      const deleteBtn = event.target.closest('.delete-strategy-btn');
+      if (deleteBtn) {
+        if (!confirm('Are you sure you want to delete this strategy?')) return;
+        const strategyId = Number(deleteBtn.dataset.strategyId);
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = '...';
+        try {
+          const response = await fetch(`${API_BASE}/delete_strategy`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ strategy_id: strategyId })
+          });
+          const data = await response.json();
+          if (response.status === 401) { localStorage.removeItem('access_token'); window.location.href = 'Auth/login.html'; return; }
+          if (!response.ok) throw new Error(data.detail || data.message || 'Unable to delete strategy.');
+          
+          const row = deleteBtn.closest('tr');
+          if (row.nextElementSibling && row.nextElementSibling.classList.contains('result-detail-row')) {
+            row.nextElementSibling.remove();
+          }
+          row.remove();
+          
+          savedStrategies = savedStrategies.filter(s => Number(s.id) !== strategyId);
+          if (savedStrategies.length === 0) {
+            strategiesEmpty.hidden = false;
+            strategiesStatus.textContent = '0 saved strategies';
+          } else {
+            strategiesStatus.textContent = `${savedStrategies.length} saved strateg${savedStrategies.length === 1 ? 'y' : 'ies'}`;
+          }
+        } catch (error) {
+          alert(error.message || 'Unable to delete strategy. Please try again.');
+          deleteBtn.disabled = false;
+          deleteBtn.textContent = 'Delete';
+        }
+        return;
+      }
+
       const button = event.target.closest('.show-results-btn');
       if (!button) return;
       const strategyId = Number(button.dataset.strategyId);

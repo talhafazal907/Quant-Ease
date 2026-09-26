@@ -29,6 +29,9 @@ class  check_user(BaseModel):
 class Strategy_Result_Request(BaseModel):
     strategy_id: Annotated[int, Field(..., gt=0, description="Primary key of the saved strategy")]
 
+class Delete_Strategy(BaseModel):
+    strategy_id: Annotated[int, Field(..., gt=0, description="Primary key of the saved strategy to be deleted")]
+
 class ema_crossover(BaseModel):
     strategy_name : Annotated[str, Field(..., description="Name of the Strategy or can be indicator name as well like double-EMA, MACD, RSI")]
     ema_short : Annotated[int, Field(..., description="Short exponential moving average of the two emacross strategy")]
