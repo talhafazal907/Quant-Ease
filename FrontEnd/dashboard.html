@@ -12,6 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
       --navy: #020d20;
@@ -507,6 +508,107 @@
       width: 100%
     }
 
+    .commentary-panel {
+      padding: 24px;
+      display: none;
+    }
+
+    .commentary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .commentary-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .commentary-icon-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #eef7e6;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .commentary-title {
+      margin: 0;
+      color: var(--navy);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.4px;
+    }
+
+    .commentary-subtitle {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .commentary-tag {
+      background: #eef7e6;
+      border: 1px solid #dce8d0;
+      color: var(--green-dark);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .commentary-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .commentary-block {
+      margin: 0;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #24334a;
+    }
+
+    .commentary-block strong {
+      color: var(--navy);
+      font-weight: 700;
+    }
+
+    .commentary-summary {
+      padding: 4px 2px;
+      font-size: 14px;
+    }
+
+    .commentary-risk {
+      background: #fdfbf7;
+      border: 1px solid #f2e3c6;
+      border-left: 4px solid #d97706;
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+
+    .commentary-insight {
+      background: #f4f9ef;
+      border: 1px solid #d8eacb;
+      border-left: 4px solid var(--green);
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+
     .summary-row {
       display: grid;
       grid-template-columns: 1.35fr .65fr;
@@ -925,7 +1027,8 @@
         min-height: 340px
       }
 
-      .chart-panel {
+      .chart-panel,
+      .commentary-panel {
         padding: 18px
       }
 
@@ -1079,6 +1182,19 @@
                 <article class="metric"><span>Max drawdown</span><strong id="maxDrawdown">—</strong><small>From equity
                     peak</small></article>
               </div>
+              <article class="panel commentary-panel" id="commentaryPanel">
+                <div class="commentary-header">
+                  <div class="commentary-title-wrap">
+                    <div class="commentary-icon-badge">✨</div>
+                    <div>
+                      <h2 class="commentary-title">Strategy Commentary &amp; AI Insights</h2>
+                      <p class="commentary-subtitle">Automated performance summary and risk breakdown</p>
+                    </div>
+                  </div>
+                  <span class="commentary-tag">AI Analysis</span>
+                </div>
+                <div class="commentary-body" id="commentaryBody"></div>
+              </article>
               <article class="panel chart-panel">
                 <h2>Equity curve</h2>
                 <p>Account value across the completed backtest.</p>
@@ -1250,7 +1366,51 @@
       return { config, payload };
     }
 
-    function renderResults(result, payload, config) {
+    function renderMarkdown(md) {
+      if (!md) return '';
+      if (window.marked && typeof window.marked.parse === 'function') {
+        return window.marked.parse(md);
+      }
+      return md
+        .split(/\n\n+/)
+        .map((paragraph) => {
+          const clean = paragraph.trim();
+          if (!clean) return '';
+          const formatted = clean
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+          return `<p>${formatted}</p>`;
+        })
+        .join('');
+    }
+
+    function renderCommentary(commentary) {
+      const panel = document.getElementById('commentaryPanel');
+      const body = document.getElementById('commentaryBody');
+      if (!panel || !body) return;
+      if (!commentary || !commentary.trim()) {
+        panel.style.display = 'none';
+        body.innerHTML = '';
+        return;
+      }
+      body.innerHTML = renderMarkdown(commentary.trim());
+      body.querySelectorAll('p').forEach((p) => {
+        const text = p.innerHTML.trim();
+        if (text.startsWith('<strong>Risk Analysis:</strong>') || text.startsWith('Risk Analysis:')) {
+          p.className = 'commentary-block commentary-risk';
+        } else if (text.startsWith('<strong>AI Insight:</strong>') || text.startsWith('AI Insight:')) {
+          p.className = 'commentary-block commentary-insight';
+        } else {
+          p.className = 'commentary-block commentary-summary';
+        }
+      });
+      panel.style.display = 'block';
+    }
+
+    function renderResults(result, payload, config, commentary) {
       const change = result.final_capital - payload.capital; const changePercent = payload.capital ? change / payload.capital * 100 : 0;
       const finalCapital = document.getElementById('finalCapital'); finalCapital.textContent = formatCurrency(result.final_capital); finalCapital.className = change >= 0 ? 'positive' : 'negative';
       document.getElementById('netChange').textContent = `${change >= 0 ? '+' : ''}${formatCurrency(change)} (${changePercent >= 0 ? '+' : ''}${formatPercent(changePercent)})`;
@@ -1259,6 +1419,7 @@
       document.getElementById('summaryStrategy').textContent = config.displayName; document.getElementById('summaryMarket').textContent = payload.market_type === 'spot' ? 'Spot market' : 'Futures market'; document.getElementById('summarySymbol').textContent = `${payload.symbol} · ${payload.time_frame}`; document.getElementById('summaryCapital').textContent = formatCurrency(payload.capital);
       const curve = Array.isArray(result.equity_curve) ? result.equity_curve : []; const color = change >= 0 ? '#64a31e' : '#bd3c3c';
       Plotly.newPlot('equityChart', [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 } }, yaxis: { title: 'Equity (USD)', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
+      renderCommentary(commentary);
       document.getElementById('emptyState').style.display = 'none'; document.getElementById('resultsContent').style.display = 'grid'; document.getElementById('lastRun').style.display = 'inline-flex'; document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -1274,7 +1435,8 @@
         const data = await response.json();
         if (response.status === 401) { localStorage.removeItem('access_token'); showError('Your session has expired. Please log in again.'); setTimeout(() => { window.location.href = 'Auth/login.html'; }, 900); return; }
         if (!response.ok) throw new Error(data.detail || data.message || 'The backtest could not be completed.');
-        renderResults(data.results || data, payload, config);
+        const commentary = data.commentry || data.commentary || data.results?.commentry || '';
+        renderResults(data.results || data, payload, config, commentary);
       } catch (error) { showError(error.message || 'Unable to reach the backend. Please try again.'); }
       finally { runButton.disabled = false; runButton.innerHTML = 'Run backtest <span aria-hidden="true">→</span>'; loading.style.display = 'none'; }
     });

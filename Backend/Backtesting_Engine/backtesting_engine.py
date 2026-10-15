@@ -1387,10 +1387,15 @@ class Backtesting_Engine:
             )
             trades = wins + losses
             winrate = wins / trades if trades > 0 else 0.0
-            return {
-                "final_capital": final_cap, "trades": trades, "win_rate": winrate * 100,
-                "max_drawdown": max_dd * 100, "equity_curve": eq_curve,
-                "wins": wins, "losses": losses, "status": 1
+            return {        
+                "final_capital": final_cap, 
+                "trades": trades, 
+                "win_rate": winrate * 100,
+                "max_drawdown": max_dd * 100, 
+                "equity_curve": eq_curve,
+                "wins": wins, 
+                "losses": losses, 
+                "status": 1
             }
 
 
@@ -1404,6 +1409,7 @@ class Backtesting_Engine:
                 if isinstance(data_, dict):
                     return data_
                 results = self.run_ema_crossover(user_data=self.user_data, data_array= data_)
+
                 return results
             elif self.user_data["strategy_name"] == "macd":
                 data = dl.Load_data(self.user_data["symbol"], self.user_data["time_frame"])
@@ -1413,6 +1419,7 @@ class Backtesting_Engine:
                 if isinstance(data_, dict):
                                 return data_
                 results = self.run_macd(user_data=self.user_data, data_array= data_)
+
                 return results
             elif self.user_data["strategy_name"] == "bollinger_band":
                 data = dl.Load_data(self.user_data["symbol"], self.user_data["time_frame"])
@@ -1420,8 +1427,9 @@ class Backtesting_Engine:
                     return {"status": "No data available", "status": 0}
                 data_ = i.add_indicator(self.user_data, data)
                 if isinstance(data_, dict):
-                                return data_
+                                return data_                
                 results = self.run_bollinger(user_data=self.user_data, data_array= data_)
+
                 return results
             elif self.user_data["strategy_name"] == "rsi":
                 data = dl.Load_data(self.user_data["symbol"], self.user_data["time_frame"])
@@ -1431,6 +1439,7 @@ class Backtesting_Engine:
                 if isinstance(data_, dict):
                         return data_
                 results = self.run_rsi(user_data=self.user_data, data_array= data_)
+
                 return results
             elif self.user_data["strategy_name"] == "vwap":
                 data = dl.Load_data(self.user_data["symbol"], self.user_data["time_frame"])
@@ -1440,6 +1449,7 @@ class Backtesting_Engine:
                 if isinstance(data_, dict):
                     return data_
                 results = self.run_vwap(user_data=self.user_data, data_array= data_)
+
                 return results
             elif self.user_data["strategy_name"] == "stoch_rsi":
                 data = dl.Load_data(self.user_data["symbol"], self.user_data["time_frame"])
@@ -1458,12 +1468,8 @@ class Backtesting_Engine:
                 if isinstance(data_, dict):
                     return data_
                 results = self.run_supertrend(user_data=self.user_data, data_array= data_)
+        
                 return results
             
         except Exception as e:
             return {"error" : f"Issue {str(e)}", "status" : 0}
-
-
-
-    
-

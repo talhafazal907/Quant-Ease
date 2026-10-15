@@ -9,11 +9,12 @@ from Backtesting_Engine.backtesting_engine import Backtesting_Engine
 from auth import bearer_scheme, create_access_token, decode_access_token
 import json
 import os
+from commentary import Reports
 import numpy as np
 from pathlib import Path
 
 dbh = DataBase_helper()
-
+rep = Reports()
 app = FastAPI(title = "QuantEase Backend API", description = "This is the backend API for QuantEase App", version = "1.0.0")
 
 app.add_middleware(
@@ -130,10 +131,11 @@ def backtest_two_ema_crossover(data: ema_crossover, user_id: int = Depends(get_c
         if results["status"] == 1:
             #Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
+            summary = rep.generate_report(strategy_data, results)
             if not dbh.save_backtest_activity(user_id, strategy_data, results):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
-            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results})
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
         else:
             return JSONResponse(status_code=500, content={"message": "Backtest failed", "details": results})
     except Exception as e:
@@ -151,16 +153,11 @@ def backtest_macd(data: MACD, user_id: int = Depends(get_current_user_id)):
         if results["status"] == 1:
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
+            summary = rep.generate_report(strategy_data, results)
             if not dbh.save_backtest_activity(user_id, strategy_data, results):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
-            return JSONResponse(
-                status_code=200, 
-                content={
-                    "message": "Backtest completed successfully", 
-                    "results": results
-                }
-            )
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
             
         elif results["status"] == 0:
             # 400 is better here because the engine ran, but the input data/logic failed gracefully
@@ -193,16 +190,11 @@ def backtest_bollinger(data: Bollinger, user_id: int = Depends(get_current_user_
         if results["status"] == 1:
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
+            summary = rep.generate_report(strategy_data, results)
             if not dbh.save_backtest_activity(user_id, strategy_data, results):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
-            return JSONResponse(
-                status_code=200, 
-                content={
-                    "message": "Backtest completed successfully", 
-                    "results": results
-                }
-            )
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
             
         elif results["status"] == 0:
             # 400 is better here because the engine ran, but the input data/logic failed gracefully
@@ -235,16 +227,11 @@ def backtest_rsi(data: RSI, user_id: int = Depends(get_current_user_id)):
         if results["status"] == 1:
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
+            summary = rep.generate_report(strategy_data, results)
             if not dbh.save_backtest_activity(user_id, strategy_data, results):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
-            return JSONResponse(
-                status_code=200, 
-                content={
-                    "message": "Backtest completed successfully", 
-                    "results": results
-                }
-            )
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
             
         elif results["status"] == 0:
             # 400 is better here because the engine ran, but the input data/logic failed gracefully
@@ -277,16 +264,11 @@ def backtest_vwap(data: VWAP, user_id: int = Depends(get_current_user_id)):
         if results["status"] == 1:
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
+            summary = rep.generate_report(strategy_data, results)
             if not dbh.save_backtest_activity(user_id, strategy_data, results):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
-            return JSONResponse(
-                status_code=200, 
-                content={
-                    "message": "Backtest completed successfully", 
-                    "results": results
-                }
-            )
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
             
         elif results["status"] == 0:
             # 400 is better here because the engine ran, but the input data/logic failed gracefully
@@ -319,16 +301,11 @@ def backtest_stoch_rsi(data: StochRSI, user_id: int = Depends(get_current_user_i
         if results["status"] == 1:
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
+            summary = rep.generate_report(strategy_data, results)
             if not dbh.save_backtest_activity(user_id, strategy_data, results):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
-            return JSONResponse(
-                status_code=200, 
-                content={
-                    "message": "Backtest completed successfully", 
-                    "results": results
-                }
-            )
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
             
         elif results["status"] == 0:
             # 400 is better here because the engine ran, but the input data/logic failed gracefully
@@ -361,16 +338,11 @@ def backtest_supertrend(data: SuperTrend, user_id: int = Depends(get_current_use
         if results["status"] == 1:
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
+            summary = rep.generate_report(strategy_data, results)
             if not dbh.save_backtest_activity(user_id, strategy_data, results):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
-            return JSONResponse(
-                status_code=200, 
-                content={
-                    "message": "Backtest completed successfully", 
-                    "results": results
-                }
-            )
+            return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
             
         elif results["status"] == 0:
             # 400 is better here because the engine ran, but the input data/logic failed gracefully
