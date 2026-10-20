@@ -52,12 +52,16 @@ class DataBase_helper:
             return None
 
     def get_user_results_by_strategy_id(self, strategy_id: int, user_id: int):
-        """Fetch one result only when its strategy belongs to the authenticated user."""
+        """Fetch a user's latest strategy result, its report, and its saved configuration."""
         try:
             query = """
-                SELECT results.*
+                SELECT results.*, ai_reports.report AS ai_report
                 FROM results
                 INNER JOIN strategies ON results.s_id = strategies.id
+                LEFT JOIN ai_reports
+                    ON ai_reports.u_id = strategies.s_id
+                    AND ai_reports.s_id = strategies.id
+                    AND ai_reports.r_id = results.r_id
                 WHERE results.s_id = %s AND strategies.s_id = %s
                 ORDER BY results.r_id DESC
                 LIMIT 1
@@ -67,9 +71,11 @@ class DataBase_helper:
             query = """SELECT * FROM strategies WHERE id = %s AND s_id = %s"""
             self.cursor.execute(query, (strategy_id, user_id))
             strategy = self.cursor.fetchone()
-            return results, strategy['config_params'] if results and strategy else (None, None)
+            if not results or not strategy:
+                return None, None
+            return results, strategy["config_params"]
         except mysql.connector.Error:
-            return None
+            return None, None
 
     def delete_strategy(self, strategy_id: int, user_id: int):
         try:
@@ -79,6 +85,9 @@ class DataBase_helper:
             strategy = self.cursor.fetchone()
             if not strategy:
                 return None  # Strategy does not belong to the user
+
+            delete_reports_query = "DELETE FROM ai_reports WHERE s_id = %s"
+            self.cursor.execute(delete_reports_query, (strategy_id,))
 
             # 2. Delete associated results first
             delete_results_query = "DELETE FROM results WHERE s_id = %s"
@@ -161,7 +170,7 @@ class DataBase_helper:
         except (mysql.connector.Error, KeyError, TypeError):
             return None
 
-    def save_backtest_activity(self, user_id: int, strategy_data: dict, results: dict):
+    def save_backtest_activity(self, user_id: int, strategy_data: dict, results: dict, report: str):
         """Persist strategy configuration and store equity curve as binary .npy file on disk."""
         try:
             # 1. Ensure target directory exists on disk
@@ -208,6 +217,17 @@ class DataBase_helper:
                     results["win_rate"],
                 ),
             )
+
+            result_id = self.cursor.lastrowid
+            report_query = """
+                INSERT INTO ai_reports (u_id, s_id, r_id, report)
+                VALUES (%s, %s, %s, %s)
+            """
+            self.cursor.execute(
+                report_query,
+                (user_id, strategy_id, result_id, report),
+            )
+
             self.conn.commit()
             return 1
             

@@ -132,7 +132,7 @@ def backtest_two_ema_crossover(data: ema_crossover, user_id: int = Depends(get_c
             #Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
             summary = rep.generate_report(strategy_data, results)
-            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+            if not dbh.save_backtest_activity(user_id, strategy_data, results, summary):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
             return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
@@ -154,7 +154,7 @@ def backtest_macd(data: MACD, user_id: int = Depends(get_current_user_id)):
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
             summary = rep.generate_report(strategy_data, results)
-            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+            if not dbh.save_backtest_activity(user_id, strategy_data, results, summary):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
             return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
@@ -191,7 +191,7 @@ def backtest_bollinger(data: Bollinger, user_id: int = Depends(get_current_user_
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
             summary = rep.generate_report(strategy_data, results)
-            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+            if not dbh.save_backtest_activity(user_id, strategy_data, results, summary):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
             return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
@@ -228,7 +228,7 @@ def backtest_rsi(data: RSI, user_id: int = Depends(get_current_user_id)):
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
             summary = rep.generate_report(strategy_data, results)
-            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+            if not dbh.save_backtest_activity(user_id, strategy_data, results, summary):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
             return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
@@ -265,7 +265,7 @@ def backtest_vwap(data: VWAP, user_id: int = Depends(get_current_user_id)):
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
             summary = rep.generate_report(strategy_data, results)
-            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+            if not dbh.save_backtest_activity(user_id, strategy_data, results, summary):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
             return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
@@ -302,7 +302,7 @@ def backtest_stoch_rsi(data: StochRSI, user_id: int = Depends(get_current_user_i
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
             summary = rep.generate_report(strategy_data, results)
-            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+            if not dbh.save_backtest_activity(user_id, strategy_data, results, summary):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
             return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
@@ -339,7 +339,7 @@ def backtest_supertrend(data: SuperTrend, user_id: int = Depends(get_current_use
             # Convert the array to a list right before sending the response
             results["equity_curve"] = results["equity_curve"].tolist()
             summary = rep.generate_report(strategy_data, results)
-            if not dbh.save_backtest_activity(user_id, strategy_data, results):
+            if not dbh.save_backtest_activity(user_id, strategy_data, results, summary):
                 return JSONResponse(status_code=500, content={"message": "Unable to save backtest activity"})
             
             return JSONResponse(status_code=200, content={"message": "Backtest completed successfully", "results": results, "commentry": summary})
@@ -430,7 +430,7 @@ def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(g
     """Return one saved result only when its strategy belongs to the JWT user."""
     try:
         row , configs= dbh.get_user_results_by_strategy_id(data.strategy_id, user_id)
-        if not row and not configs:
+        if not row:
             return JSONResponse(status_code=404, content={"message": "Results not found for this strategy"})
 
         response = {
@@ -444,6 +444,7 @@ def get_strategy_results(data: Strategy_Result_Request, user_id: int = Depends(g
             "max_drawdown": _json_number(row.get("max_drawdown")),
             "win_rate": _json_number(row.get("winrate")),
             "equity_curve": _load_equity_curve(row.get("equity_data")),
+            "report": row.get("ai_report") or "",
         }
         return JSONResponse(status_code=200, content={"message": "Results fetched successfully", "results": response, "config_params": json.loads(configs)})
     except (FileNotFoundError, ValueError):

@@ -9,8 +9,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('quantease-theme');
+      document.documentElement.dataset.theme = savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (_) { document.documentElement.dataset.theme = 'light'; }
+  </script>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
@@ -868,10 +874,72 @@
       font-size: 15px
     }
 
-    .inline-results-head span {
+.inline-results-head span {
       color: var(--success);
       font-size: 11px;
       font-weight: 700
+    }
+
+    .inline-report {
+      background: #f8faf6;
+      border: 1px solid #dce8d0;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .inline-report-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-bottom: 12px;
+      color: var(--navy);
+      font: 700 13px Montserrat;
+    }
+
+    .inline-report-heading span {
+      color: var(--muted);
+      font: 600 10px 'Open Sans', sans-serif;
+    }
+
+    .inline-report .commentary-body { gap: 10px; }
+
+    .inline-report-empty {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .inline-report {
+      background: #f8faf6;
+      border: 1px solid #dce8d0;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .inline-report-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-bottom: 12px;
+      color: var(--navy);
+      font: 700 13px Montserrat;
+    }
+
+    .inline-report-heading span {
+      color: var(--muted);
+      font: 600 10px 'Open Sans', sans-serif;
+    }
+
+    .inline-report .commentary-body { gap: 10px; }
+
+    .inline-report-empty {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .inline-metrics {
@@ -1066,6 +1134,341 @@
         padding: 18px 16px
       }
     }
+
+    /* Precision workspace theme. Kept inline with the existing dashboard styles. */
+    :root {
+      color-scheme: light;
+      --navy: #07172b;
+      --navy-2: #10253e;
+      --green: #3d7c1f;
+      --green-dark: #2f6818;
+      --paper: #f5f7f8;
+      --white: #fff;
+      --surface: #fff;
+      --surface-soft: #f0f3f5;
+      --ink: #142238;
+      --muted: #68778a;
+      --line: #dfe5eb;
+      --success: #34751f;
+      --danger: #bd3c3c;
+      --sidebar-bg: #07172b;
+      --sidebar-text: #c4d0de;
+      --field-bg: #fff;
+      --soft-green: #eff6e9;
+      --shadow: 0 12px 32px rgba(7, 23, 43, .055);
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --navy: #e6edf5;
+      --navy-2: #0d1928;
+      --green: #8bc45a;
+      --green-dark: #a3d178;
+      --paper: #0a111b;
+      --white: #111c2a;
+      --surface: #111c2a;
+      --surface-soft: #172434;
+      --ink: #e6edf5;
+      --muted: #9aa9bb;
+      --line: #29384b;
+      --success: #9bd477;
+      --danger: #f08b8b;
+      --sidebar-bg: #050b13;
+      --sidebar-text: #c4d0de;
+      --field-bg: #0d1826;
+      --soft-green: #1c3020;
+      --shadow: 0 12px 32px rgba(0, 0, 0, .22);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body,
+    button,
+    input,
+    select {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      transition: background-color .22s ease, color .22s ease;
+    }
+
+    .app-shell { grid-template-columns: 248px minmax(0, 1fr); }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      padding: 28px 18px 22px;
+    }
+
+    .brand {
+      font: 700 21px/1 Inter, sans-serif;
+      letter-spacing: -1px;
+    }
+
+    .brand img { width: 34px; height: 34px; }
+    .workspace-label { margin-top: 48px; }
+
+    .side-nav { gap: 6px; }
+
+    .side-nav a {
+      min-height: 43px;
+      border-radius: 8px;
+      color: #aebdce;
+      transition: color .18s ease, background-color .18s ease, transform .18s ease;
+    }
+
+    .side-nav a:hover { transform: translateX(2px); }
+    .side-nav a.active { background: rgba(255, 255, 255, .11); color: #fff; }
+    .nav-icon { color: #9dcc6b; }
+
+    .account-card { border-top-color: rgba(255, 255, 255, .14); }
+    .signout { font-family: Inter, sans-serif; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      height: 68px;
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      border-bottom-color: var(--line);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .topbar-actions { display: flex; align-items: center; gap: 20px; }
+
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .breadcrumb b { color: var(--ink); font-weight: 650; }
+
+    .top-status { color: var(--muted); font-size: 11px; }
+    .top-status i { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 16%, transparent); }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      font: 600 11px Inter, sans-serif;
+      transition: border-color .18s ease, background-color .22s ease, color .22s ease, transform .18s ease;
+    }
+
+    .theme-toggle:hover { border-color: var(--green); transform: translateY(-1px); }
+    .theme-icon { color: var(--green); font-size: 15px; line-height: 1; }
+
+    .content { max-width: 1500px; padding-top: 37px; }
+
+    .page-intro { margin-bottom: 26px; }
+    .page-intro h1 { color: var(--ink); font: 680 clamp(27px, 2.8vw, 35px)/1.2 Inter, sans-serif; letter-spacing: -1.35px; }
+    .page-intro p { color: var(--muted); }
+    .page-intro h1, .page-intro .eyebrow, .page-intro > div > p:last-child { animation: qe-rise-in .45s cubic-bezier(.2,.75,.25,1) both; }
+    .page-intro h1 { animation-delay: .04s; }
+    .page-intro > div > p:last-child { animation-delay: .09s; }
+
+    .eyebrow { color: var(--green-dark); font-size: 9px; letter-spacing: 1.3px; }
+
+    .last-run {
+      background: var(--soft-green);
+      color: var(--success);
+      border: 1px solid color-mix(in srgb, var(--success) 20%, var(--line));
+      border-radius: 7px;
+    }
+
+    .workspace-grid { grid-template-columns: minmax(315px, 370px) minmax(0, 1fr); gap: 20px; }
+
+    .panel {
+      background: var(--surface);
+      border-color: var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      transition: background-color .22s ease, border-color .22s ease, box-shadow .22s ease;
+    }
+
+    .config-panel { padding: 23px; }
+    .panel-head { margin-bottom: 20px; }
+    .panel-head h2, .chart-panel h2, .summary-panel h2 { color: var(--ink); font-family: Inter, sans-serif; font-weight: 650; }
+    .panel-head p, .chart-panel p { color: var(--muted); }
+    .step { background: var(--soft-green); color: var(--success); font-family: Inter, sans-serif; }
+    .form-section { border-top-color: var(--line); }
+    .section-title { color: var(--muted); }
+    .input-group label { color: var(--ink); font-size: 11px; font-weight: 600; }
+
+    .input-group input,
+    .input-group select {
+      border-color: var(--line);
+      border-radius: 7px;
+      background: var(--field-bg);
+      color: var(--ink);
+      font: 500 12px Inter, sans-serif;
+      transition: border-color .18s ease, box-shadow .18s ease, background-color .22s ease;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus { border-color: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+
+    .strategy-note {
+      background: var(--soft-green);
+      border-left-color: var(--green);
+      color: var(--muted);
+    }
+
+    .run-button,
+    .show-results-btn {
+      background: var(--green);
+      color: #fff;
+      font: 650 12px Inter, sans-serif;
+      transition: background-color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+
+    .run-button { min-height: 44px; border-radius: 7px; }
+    .run-button:hover:not(:disabled), .show-results-btn:hover:not(:disabled) { background: var(--green-dark); box-shadow: 0 7px 16px color-mix(in srgb, var(--green) 20%, transparent); transform: translateY(-1px); }
+    .run-button:disabled, .show-results-btn:disabled { background: #7b9870; }
+    .loading { color: var(--muted); }
+    .spinner { border-color: color-mix(in srgb, var(--green) 18%, var(--line)); border-top-color: var(--green); }
+
+    .form-error, .strategies-error {
+      background: color-mix(in srgb, var(--danger) 9%, var(--surface));
+      border-color: color-mix(in srgb, var(--danger) 30%, var(--line));
+      color: var(--danger);
+    }
+
+    .results-area { gap: 18px; }
+    .empty-state { background: var(--surface); }
+    .empty-icon { background: var(--soft-green); color: var(--green-dark); border-radius: 12px; }
+    .empty-state h2 { color: var(--ink); font-family: Inter, sans-serif; font-weight: 650; }
+    .empty-state p { color: var(--muted); }
+
+    .metrics-grid { gap: 11px; }
+    .metric {
+      background: var(--surface);
+      border-color: var(--line);
+      border-radius: 9px;
+      box-shadow: none;
+      transition: transform .18s ease, border-color .18s ease, background-color .22s ease;
+      animation: qe-rise-in .42s cubic-bezier(.2,.75,.25,1) both;
+    }
+
+    .metric:hover { border-color: color-mix(in srgb, var(--green) 36%, var(--line)); transform: translateY(-2px); }
+    .metric span, .metric small { color: var(--muted); }
+    .metric strong { color: var(--ink); font: 650 clamp(18px, 1.8vw, 24px) Inter, sans-serif; letter-spacing: -.8px; }
+    .positive { color: var(--success) !important; }
+    .negative { color: var(--danger) !important; }
+
+    .chart-panel, .commentary-panel, .summary-panel { padding: 21px; }
+    .chart-panel h2 { font-size: 16px; }
+    .chart-panel p { margin-bottom: 10px; }
+    .equity-chart { height: 285px; }
+    .commentary-header { border-bottom-color: var(--line); }
+    .commentary-icon-badge, .commentary-tag { background: var(--soft-green); border-color: color-mix(in srgb, var(--green) 20%, var(--line)); color: var(--green-dark); }
+    .commentary-title { color: var(--ink); font: 650 15px Inter, sans-serif; }
+    .commentary-subtitle { color: var(--muted); }
+    .commentary-block { color: var(--ink); font-size: 13px; }
+    .commentary-block strong { color: var(--ink); }
+    .commentary-risk { background: color-mix(in srgb, #d97706 8%, var(--surface)); border-color: color-mix(in srgb, #d97706 24%, var(--line)); border-left-color: #d97706; }
+    .commentary-insight { background: var(--soft-green); border-color: color-mix(in srgb, var(--green) 25%, var(--line)); border-left-color: var(--green); }
+
+    .summary-row { gap: 18px; }
+    .detail-list div { border-bottom-color: var(--line); color: var(--muted); }
+    .detail-list b { color: var(--ink); }
+    .status-box { background: #0d2038; border: 1px solid rgba(255,255,255,.07); border-radius: 10px; }
+    .status-box .eyebrow { color: #a3d178; }
+    .status-box h2 { font: 650 17px Inter, sans-serif; }
+
+    .strategies-panel { padding: 0; }
+    .strategies-panel .panel-head { padding: 23px 23px 0; }
+    .strategies-toolbar { padding: 12px 23px 17px; }
+    .strategies-status { color: var(--muted); }
+    .strategies-table th, .strategies-table td { border-bottom-color: var(--line); }
+    .strategies-table th { background: var(--surface-soft); color: var(--muted); }
+    .strategies-table td { color: var(--ink); }
+    .strategies-table tbody tr:hover { background: color-mix(in srgb, var(--green) 5%, var(--surface)); }
+    .strategies-table td.muted-cell { color: var(--muted); }
+    .show-results-btn { border-radius: 6px; padding: 8px 11px; }
+    .delete-strategy-btn { background: color-mix(in srgb, var(--danger) 8%, var(--surface)); color: var(--danger); font: 600 11px Inter, sans-serif; }
+    .delete-strategy-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 15%, var(--surface)); }
+    .strategies-empty { color: var(--muted); }
+    .result-detail-cell { background: color-mix(in srgb, var(--green) 4%, var(--surface)); }
+    .inline-results { border-color: color-mix(in srgb, var(--green) 22%, var(--line)); animation: qe-rise-in .42s cubic-bezier(.2,.75,.25,1) both; }
+    .inline-results-head h3, .inline-chart-wrap h3 { color: var(--ink); font-family: Inter, sans-serif; font-weight: 650; }
+    .inline-results-head span { color: var(--success); }
+    .inline-report, .inline-chart-wrap { background: var(--surface); border-color: var(--line); }
+    .inline-report-heading { color: var(--ink); font-family: Inter, sans-serif; }
+    .inline-report-heading span, .inline-report-empty, .inline-chart-wrap p { color: var(--muted); }
+    .param-badge { background: var(--surface-soft); border-color: var(--line); color: var(--ink); }
+    .param-badge span { color: var(--muted); }
+    .inline-metric { background: var(--surface); border-color: var(--line); }
+    .inline-metric span, .inline-metric small { color: var(--muted); }
+    .inline-metric strong { color: var(--ink); font: 650 18px Inter, sans-serif; }
+    .inline-equity-chart { height: 245px; }
+
+    html[data-theme="dark"] .brand img { filter: brightness(0) invert(1); }
+    html[data-theme="dark"] .run-button:not(:disabled),
+    html[data-theme="dark"] .show-results-btn:not(:disabled) { color: #07172b; }
+    html[data-theme="dark"] .last-run { background: #20341f; }
+    html[data-theme="dark"] .commentary-risk { background: #2b2418; }
+    html[data-theme="dark"] .status-box { background: #07111e; }
+    html[data-theme="dark"] .delete-strategy-btn { background: #351f24; }
+    html[data-theme="dark"] .delete-strategy-btn:hover:not(:disabled) { background: #48242b; }
+    html[data-theme="dark"] .result-detail-cell { background: #101c28; }
+    html[data-theme="dark"] .positive { color: var(--success) !important; }
+    html[data-theme="dark"] .negative { color: var(--danger) !important; }
+
+    :focus-visible { outline: 3px solid color-mix(in srgb, var(--green) 55%, transparent); outline-offset: 3px; }
+
+    @keyframes qe-rise-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media(max-width:1050px) {
+      .app-shell { grid-template-columns: 220px minmax(0, 1fr); }
+      .sidebar { width: auto; }
+      .workspace-grid { grid-template-columns: minmax(280px, 330px) minmax(0, 1fr); }
+    }
+
+    @media(max-width:760px) {
+      .app-shell { display: block; }
+      .sidebar { display: none; }
+      .mobile-brand { background: var(--sidebar-bg); }
+      .topbar { height: 60px; padding: 0 16px; }
+      .topbar-actions { gap: 10px; }
+      .theme-toggle { min-height: 32px; padding: 0 8px; }
+      .content { padding: 28px 16px 44px; }
+      .workspace-grid { grid-template-columns: 1fr; }
+      .strategies-panel .panel-head { padding: 20px 17px 0; }
+      .strategies-toolbar { padding: 12px 17px 15px; }
+      .chart-panel, .commentary-panel, .summary-panel { padding: 17px; }
+      .equity-chart { height: 250px; }
+    }
+
+    @media(max-width:430px) {
+      .topbar { padding: 0 12px; }
+      .topbar-actions { gap: 8px; }
+      .top-status { font-size: 0; gap: 0; }
+      .top-status i { width: 8px; height: 8px; }
+      .theme-toggle { gap: 0; width: 34px; padding: 0; }
+      .theme-toggle .theme-label { display: none; }
+      .config-panel { padding: 18px; }
+    }
+
+    @media(prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
   </style>
 </head>
 
@@ -1091,7 +1494,10 @@
     <main class="main">
       <header class="topbar">
         <div class="breadcrumb" id="breadcrumb"><b>Workspace</b> &nbsp;/&nbsp; New backtest</div>
-        <div class="top-status"><i></i> Secure session</div>
+        <div class="topbar-actions">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">◐</span><span class="theme-label">Dark mode</span></button>
+          <div class="top-status"><i></i> Secure session</div>
+        </div>
       </header>
       <div class="content" id="backtestView">
         <section class="page-intro">
@@ -1369,7 +1775,8 @@
     function renderMarkdown(md) {
       if (!md) return '';
       if (window.marked && typeof window.marked.parse === 'function') {
-        return window.marked.parse(md);
+        // Reports come from persisted data; escape raw HTML before Markdown parsing.
+        return window.marked.parse(escapeHtml(md));
       }
       return md
         .split(/\n\n+/)
@@ -1410,6 +1817,14 @@
       panel.style.display = 'block';
     }
 
+    function getChartTheme() {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      return {
+        text: dark ? '#9aa9bb' : '#68778a',
+        grid: dark ? '#29384b' : '#dfe5eb'
+      };
+    }
+
     function renderResults(result, payload, config, commentary) {
       const change = result.final_capital - payload.capital; const changePercent = payload.capital ? change / payload.capital * 100 : 0;
       const finalCapital = document.getElementById('finalCapital'); finalCapital.textContent = formatCurrency(result.final_capital); finalCapital.className = change >= 0 ? 'positive' : 'negative';
@@ -1418,7 +1833,8 @@
       document.getElementById('winLoss').textContent = result.wins !== undefined ? `${result.wins} wins · ${result.losses} losses` : 'Closed trades';
       document.getElementById('summaryStrategy').textContent = config.displayName; document.getElementById('summaryMarket').textContent = payload.market_type === 'spot' ? 'Spot market' : 'Futures market'; document.getElementById('summarySymbol').textContent = `${payload.symbol} · ${payload.time_frame}`; document.getElementById('summaryCapital').textContent = formatCurrency(payload.capital);
       const curve = Array.isArray(result.equity_curve) ? result.equity_curve : []; const color = change >= 0 ? '#64a31e' : '#bd3c3c';
-      Plotly.newPlot('equityChart', [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 } }, yaxis: { title: 'Equity (USD)', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
+      const chartTheme = getChartTheme();
+      Plotly.newPlot('equityChart', [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: chartTheme.text, gridcolor: chartTheme.grid, zeroline: false, titlefont: { size: 11, color: chartTheme.text } }, yaxis: { title: 'Equity (USD)', color: chartTheme.text, gridcolor: chartTheme.grid, zeroline: false, titlefont: { size: 11, color: chartTheme.text }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
       renderCommentary(commentary);
       document.getElementById('emptyState').style.display = 'none'; document.getElementById('resultsContent').style.display = 'grid'; document.getElementById('lastRun').style.display = 'inline-flex'; document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -1511,12 +1927,34 @@
             <article class="inline-metric"><span>Win rate</span><strong>${escapeHtml(formatPercent(result.win_rate || 0))}</strong><small>${escapeHtml(result.wins !== undefined ? `${result.wins} wins · ${result.losses} losses` : 'Closed trades')}</small></article>
             <article class="inline-metric"><span>Max drawdown</span><strong class="negative">-${escapeHtml(formatPercent(Math.abs(result.max_drawdown || 0)))}</strong><small>From equity peak</small></article>
           </div>
+          <section class="inline-report" aria-label="AI performance report">
+            <div class="inline-report-heading">AI performance report <span>Generated when this backtest ran</span></div>
+            <div class="commentary-body saved-commentary-body"></div>
+          </section>
           ${parametersSection}
           <div class="inline-chart-wrap"><h3>Equity curve</h3><p>Account value across this historical run.</p><div class="inline-equity-chart" id="${chartId}"></div></div>
         </div>`;
       detailRow.appendChild(detailCell);
+      const savedReportBody = detailCell.querySelector('.saved-commentary-body');
+      const savedReport = typeof result.report === 'string' ? result.report.trim() : '';
+      if (savedReport) {
+        savedReportBody.innerHTML = renderMarkdown(savedReport);
+        savedReportBody.querySelectorAll('p').forEach((paragraph) => {
+          const text = paragraph.innerHTML.trim();
+          if (text.startsWith('<strong>Risk Analysis:</strong>') || text.startsWith('Risk Analysis:')) {
+            paragraph.className = 'commentary-block commentary-risk';
+          } else if (text.startsWith('<strong>AI Insight:</strong>') || text.startsWith('AI Insight:')) {
+            paragraph.className = 'commentary-block commentary-insight';
+          } else {
+            paragraph.className = 'commentary-block commentary-summary';
+          }
+        });
+      } else {
+        savedReportBody.innerHTML = '<p class="inline-report-empty">No saved AI report is available for this backtest.</p>';
+      }
       strategyRow.insertAdjacentElement('afterend', detailRow);
-      Plotly.newPlot(chartId, [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 } }, yaxis: { title: 'Equity (USD)', color: '#728096', gridcolor: '#edf0f3', zeroline: false, titlefont: { size: 11 }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
+      const chartTheme = getChartTheme();
+      Plotly.newPlot(chartId, [{ y: curve, x: curve.map((_, index) => index + 1), type: 'scatter', mode: 'lines', line: { color, width: 2.5 }, fill: 'tozeroy', fillcolor: change >= 0 ? 'rgba(100,163,30,.12)' : 'rgba(189,60,60,.10)', hovertemplate: 'Point %{x}<br>Equity: $%{y:,.2f}<extra></extra>' }], { margin: { l: 54, r: 20, t: 8, b: 42 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', xaxis: { title: 'Backtest step', color: chartTheme.text, gridcolor: chartTheme.grid, zeroline: false, titlefont: { size: 11, color: chartTheme.text } }, yaxis: { title: 'Equity (USD)', color: chartTheme.text, gridcolor: chartTheme.grid, zeroline: false, titlefont: { size: 11, color: chartTheme.text }, tickprefix: '$' }, showlegend: false, hoverlabel: { bgcolor: '#020d20' } }, { responsive: true, displayModeBar: false });
       detailRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -1649,6 +2087,44 @@
     });
 
     renderDynamicFields(strategySelect.value);
+  </script>
+  <script>
+    (() => {
+      const themeButtons = document.querySelectorAll('[data-theme-toggle]');
+      const setTheme = (theme, persist = true) => {
+        document.documentElement.dataset.theme = theme;
+        if (persist) {
+          try { localStorage.setItem('quantease-theme', theme); } catch (_) { /* Theme still applies for this page. */ }
+        }
+        themeButtons.forEach((button) => {
+          const nextTheme = theme === 'dark' ? 'light' : 'dark';
+          const label = nextTheme === 'dark' ? 'Dark mode' : 'Light mode';
+          button.setAttribute('aria-label', `Switch to ${label.toLowerCase()}`);
+          button.title = `Switch to ${label.toLowerCase()}`;
+          const icon = button.querySelector('.theme-icon');
+          const text = button.querySelector('.theme-label');
+          if (icon) icon.textContent = theme === 'dark' ? '☼' : '◐';
+          if (text) text.textContent = label;
+        });
+
+        if (window.Plotly && typeof window.Plotly.relayout === 'function') {
+          const text = theme === 'dark' ? '#9aa9bb' : '#68778a';
+          const grid = theme === 'dark' ? '#29384b' : '#dfe5eb';
+          document.querySelectorAll('.js-plotly-plot').forEach((plot) => {
+            window.Plotly.relayout(plot, {
+              'xaxis.color': text, 'xaxis.gridcolor': grid, 'xaxis.titlefont.color': text,
+              'yaxis.color': text, 'yaxis.gridcolor': grid, 'yaxis.titlefont.color': text
+            });
+          });
+        }
+      };
+
+      const initialTheme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      setTheme(initialTheme, false);
+      themeButtons.forEach((button) => button.addEventListener('click', () => {
+        setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+      }));
+    })();
   </script>
 </body>
 
